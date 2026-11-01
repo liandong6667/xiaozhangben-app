@@ -218,6 +218,54 @@
     closeSheets();
   }catch(e){ ok("D 段没抛异常", false, e.message); }
 
+  /* ================= E. 「选好图标」有两条路（2026-11-01 用户报「明明选了却记不上」） =====
+     现象：关掉自动识别后，他点了分类「纸品」，再点「记上」却飘出「请选择一个图标」。
+     根因：当时只认 state.manualIc（在虚线图案里专门挑的那个），点分类不算数 ——
+     可在用户眼里，分类 chip 本身就带着图标，点它 = 选好了。
+     所以：挑过图标 **或** 点过分类，都算选好；两条都没走才拦。 */
+  try{
+    seed();
+    openAddSheet();
+    q("qiAutoIc").checked = false; fire(q("qiAutoIc"), "change");
+    var n2 = state.records.length;
+    typeIn("吹头发 1");
+
+    /* 第二条路：直接点分类 */
+    var chip = document.querySelector('#catChips [data-cat="daily"]');
+    ok("E1 分类芯片在", !!chip);
+    if(chip) chip.click();
+    ok("E2 点分类记下了大类", state.manualCat === "daily", String(state.manualCat));
+
+    q("qiToast").classList.remove("on"); q("qiToast").textContent = "";
+    q("btnAdd").click();
+    ok("E3 点过分类就能记上", state.records.length === n2 + 1,
+       state.records.length + "/" + (n2 + 1));
+    var e1 = state.records[state.records.length - 1];
+    ok("E4 图标留空，明细行用分类图案", e1 && !e1.ic, e1 && e1.ic);
+    ok("E5 不再拦着飘提示", !q("qiToast").classList.contains("on"), q("qiToast").textContent);
+
+    /* 两条路都没走：照旧拦住 */
+    openAddSheet();
+    state.manualCat = null; state.manualSub = null; state.manualIc = "";
+    q("qiAutoIc").checked = false; fire(q("qiAutoIc"), "change");
+    var n3 = state.records.length;
+    typeIn("吹头发 2");
+    q("btnAdd").click();
+    ok("E6 啥都没选还是拦住", state.records.length === n3, state.records.length + "/" + n3);
+    ok("E7 照旧飘「请选择一个图标」", q("qiToast").classList.contains("on") &&
+       (q("qiToast").textContent || "").indexOf("请选择一个图标") >= 0, q("qiToast").textContent);
+
+    /* 预览要显示手挑的那个图案 —— 挑完预览还是分类图案，看着就像没挑上 */
+    state.manualIc = "\uD83E\uDDF4";
+    previewManual();
+    ok("E8 预览亮出手挑的图案", (q("pvCat").textContent || "").indexOf("\uD83E\uDDF4") >= 0,
+       q("pvCat").textContent);
+    state.manualIc = "";
+    previewManual();
+    ok("E9 没挑时预览回到分类图案", (q("pvCat").textContent || "").indexOf("\uD83E\uDDF4") < 0,
+       q("pvCat").textContent);
+  }catch(e){ ok("E 段没抛异常", false, e.message); }
+
   p("VER", VER.name);
   p("ERR", (window.__errs || []).length ? window.__errs.join(" | ") : "none");
   document.title = all + "/" + all + " || " + (bad ? R.filter(function(x){ return x.charAt(0) === "N"; }).join(" | ") : "全过");

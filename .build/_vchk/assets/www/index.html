@@ -7384,7 +7384,7 @@ function openAddSheet(){
       而且是系统弹窗，不算跳浏览器。网页版没有原生壳，才退回浏览器下载。
    地址填几个就按顺序试几个，先回的算——一个挂了不影响。
    ===================================================================== */
-const VER = {code: 116, name: "1.6.109"};
+const VER = {code: 117, name: "1.6.110"};
 
 /* 更新说明就一句话。
    以前这里堆着三五条，弹窗被撑到顶到屏幕外，用户原话「简洁一点」。
@@ -8142,7 +8142,16 @@ function previewManual(){
      规则的大类跟当前显示的大类对不上就不套用 —— 用户手动换了大类，旧细分没意义。 */
   const _ruleSub = (_pr && _pr.s && _pr.c === c.k) ? _pr.s : "";
   const sb = multi ? null : subOf(state.manualSub || _ruleSub || subGuess((r.note || "") + " " + txt, c.k));
-  $("pvCat").innerHTML = sb ? (gicon(sb.k, sb.e) + " " + esc(sb.n)) : (gicon(c.k, c.e) + " " + esc(c.n));
+  /* 在虚线图案里专门挑过图标（manualIc）就把它亮在预览上 ——
+     不然挑完预览还是分类那个图案，用户以为没挑上（2026-11-01「我明明选择图标了」）。
+     预览这个胶囊就是"记上以后明细行长什么样"，图标必须跟最终一致。 */
+  const _mIc = String(state.manualIc || "").trim();
+  const _pvLabel = esc(sb ? sb.n : c.n);
+  /* 手挑的图标用原样 emoji —— 明细行对手挑图标就是直接显示原图案（it-ic emo），
+     预览要跟最终结果长一样，不能这边画线条版、那边是 emoji。 */
+  $("pvCat").innerHTML = _mIc ? (esc(_mIc) + " " + _pvLabel)
+    : sb ? (gicon(sb.k, sb.e) + " " + _pvLabel)
+         : (gicon(c.k, c.e) + " " + _pvLabel);
   /* 顺手把「认成哪家店」也念出来（2026-11-01 用户报）：
      以前预览只有分类 + 金额，商户名要记完翻明细才看得到，
      而它就是最容易认错的那一项（「中午食堂吃饭15」会记成「食堂吃饭」）。
@@ -8279,7 +8288,12 @@ function commitManual(){
      那行飘字自己就是入口 —— 点它一下才开面板，不点它就只是提醒。 */
   const _autoIcBox = $("qiAutoIc");
   const _manualIc = (_autoIcBox && !_autoIcBox.checked) ? String(state.manualIc || "") : "";
-  if(_autoIcBox && !_autoIcBox.checked && !_manualIc){
+  /* 「选好」有两条路，都算数（2026-11-01 用户报「我明明选择图标了但是记不上」）：
+     ① 点预览里那个虚线圈起来的图案，进面板专门挑一个 → state.manualIc；
+     ② 直接在下面分类里点一颗（纸品、洗护…）→ manualCat/manualSub。
+        分类 chip 本身就带着图标，用户眼里点它 = 选好图标了。
+     两条都没走才提示。他截图里就是点了「纸品」却被拦下的情况。 */
+  if(_autoIcBox && !_autoIcBox.checked && !_manualIc && !state.manualCat && !state.manualSub){
     toastTip("请选择一个图标");
     return;
   }
