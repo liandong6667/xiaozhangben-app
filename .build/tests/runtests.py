@@ -19,7 +19,7 @@ WAIT_SEC = 60          # 单个测试等结果回传的上限（虚拟时钟下�
 TMP = os.path.join(BASE, "_run")
 os.makedirs(TMP, exist_ok=True)
 
-ORDER = ["brands2", "games", "real", "real2", "real3", "fix18", "fix19", "fix20", "fix21", "fix22", "fix25", "fix26", "fix27", "fix28", "fix30", "fix31", "vds", "vds2", "vds3", "cardanim", "cardhide", "pinicon", "storefail", "audit", "deep3", "deep5", "deep6", "deep4", "big1", "big2", "big3", "big4", "big5", "big6", "big7", "fix17", "fix16", "fix15", "fix14", "fix13", "fix3", "fix2", "fix5", "fix6", "fix7", "fix8", "fix9", "fix10", "fix11", "fix12", "imp", "dlgtest", "fix32", "fix34", "fix35", "fix36", "fix37", "fix38", "fix39", "fix40", "fix41", "fix42", "fix43", "fix44", "fix45", "fix46", "fix47", "walkuse", "smoke", "updfake2", "tmppay", "apidrive", "deep1", "deep2"]
+ORDER = ["brands2", "games", "real", "real2", "real3", "fix18", "fix19", "fix20", "fix21", "fix22", "fix25", "fix26", "fix27", "fix28", "fix30", "fix31", "vds", "vds2", "vds3", "cardanim", "cardhide", "pinicon", "storefail", "audit", "deep3", "deep5", "deep6", "deep4", "big1", "big2", "big3", "big4", "big5", "big6", "big7", "fix17", "fix16", "fix15", "fix14", "fix13", "fix3", "fix2", "fix5", "fix6", "fix7", "fix8", "fix9", "fix10", "fix11", "fix12", "imp", "dlgtest", "fix32", "fix34", "fix35", "fix36", "fix37", "fix38", "fix39", "fix40", "fix41", "fix42", "fix43", "fix44", "fix45", "fix46", "fix47", "fix49", "walkuse", "smoke", "updfake2", "tmppay", "apidrive", "deep1", "deep2"]
 
 
 def sample_csv():

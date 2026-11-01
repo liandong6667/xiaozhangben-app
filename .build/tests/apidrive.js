@@ -33,7 +33,8 @@ setTimeout(async function(){
       var sub = ($id("updSub") || {}).textContent || "";
       if(sub.indexOf("当前 " + VER.name) >= 0) y("副标题带当前版本");
       else n("副标题异常");
-      if(document.querySelectorAll("#updList b").length >= 1) y("有更新条目");
+      /* 一句话的更新说明现在不带「·」小圆点，所以别数 <b>，直接看有没有字 */
+      if((($id("updList") || {}).textContent || "").trim().length >= 1) y("有更新条目");
       else n("更新条目为空");
     }
 

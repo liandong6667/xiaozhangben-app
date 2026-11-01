@@ -48,6 +48,14 @@ if sec:
             notes.append(s.lstrip("-").strip())
         elif notes:
             notes[-1] += s
+# 现在 CHANGELOG 那一节就是一句话、不带 "-" 列表，这里得接住，
+# 不然 log 是空的，弹窗会去念兜底那句。只取第一句，弹窗别撑太长。
+if not notes and sec:
+    for line in sec.group(1).splitlines():
+        s = line.strip()
+        if s and not s.startswith("细节"):
+            notes = [s]
+            break
 notes = notes[:6]          # 弹窗最多显示 6 行，多的也看不见
 
 payload = {
