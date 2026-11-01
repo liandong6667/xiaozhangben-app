@@ -7,6 +7,7 @@
   function p(k, v){ R.push(k + "=" + v); }
   function ok(name, cond, extra){ all++; if(!cond) bad++; p((cond ? "Y" : "N") + name, extra || ""); }
   function q(id){ return document.getElementById(id); }
+  function openSheets(){ return Array.prototype.slice.call(document.querySelectorAll(".sheet.on")).map(function(x){ return x.id; }); }
   function fire(el, ev){ el.dispatchEvent(new Event(ev || "input", {bubbles: true})); }
   function seed(){
     var D = 864e5, t = new Date(); t.setHours(0, 0, 1, 0); var T0 = t.getTime();
@@ -24,67 +25,58 @@
     if(typeof previewManual === "function") previewManual();
   }
 
-  /* ================= A. 图标：关掉自动识别就得自己挑 =================
-     2026-11-01 用户把交互最终敲定成这样：
-       · 面板里**不摆任何常驻入口**（那行虚线「点这里挑一个图标」被要求删掉）；
-       · 没挑图标点「记上」→ 不记账，底部飘一行淡色小字「请选择一个图标」，几秒自己淡掉；
-       · 同时把挑图标的面板推出来（光提示不给去处，用户不知道去哪挑）。 */
+  /* ================= A. 图标：关掉自动识别就得自己挑（2026-11-01 最终形态） =====
+     用户前前后后四轮敲定成这样：
+       · 记一笔时**再也没有「挑个图标」那一屏**（#sheetIc / openIcPick 整段删掉），
+         点预览、点分类都不许跳出去 —— 原话「以后点东西不要再跳转到这个界面了」；
+       · 选图标 = 点下面那排分类（或「＋ 更多」挑一档细分）；
+       · 没选就点「记上」→ 不记账，底部飘一行淡色小字「请选择一个图标」，几秒自己淡掉，
+         顺手把下面那排分类闪一下，指着那儿。 */
   try{
     seed();
     openAddSheet();
     ok("A1 默认勾着自动识别", q("qiAutoIc").checked === true);
     ok("A2 面板里没有那行虚线框", !q("qiIcBtn") && !q("qiIcNeed") && !q("qiIcBox"));
+    ok("A3 挑图标那一屏整个没了", !q("sheetIc") && typeof openIcPick !== "function",
+       "openIcPick=" + typeof openIcPick);
 
     q("qiAutoIc").checked = false; fire(q("qiAutoIc"), "change");
-    ok("A3 取消勾选后面板保持原样", !q("qiIcBtn") && !q("qiIcNeed"));
+    ok("A4 取消勾选后面板保持原样", !q("qiIcBtn") && !q("qiIcNeed"));
 
     /* 没挑就点「记上」 */
     var n0 = state.records.length;
     typeIn("吹头发 1");
     q("btnAdd").click();
-    ok("A4 没挑图标不让记", state.records.length === n0, state.records.length + "/" + n0);
-    ok("A5 底部飘出「请选择一个图标」", q("qiToast").classList.contains("on") &&
+    ok("A5 没挑图标不让记", state.records.length === n0, state.records.length + "/" + n0);
+    ok("A6 底部飘出「请选择一个图标」", q("qiToast").classList.contains("on") &&
        (q("qiToast").textContent || "").indexOf("请选择一个图标") >= 0, q("qiToast").textContent);
-    ok("A6 补记面板还开着", q("sheetAdd").classList.contains("on"));
-    /* 2026-11-01 用户：别再弹那个画面；下方小字只是提醒，不弹面板、不当入口 */
-    ok("A7 挑图标面板不再自动弹", !q("sheetIc").classList.contains("on"));
-    ok("A8 飘字不可点（纯提醒）", getComputedStyle(q("qiToast")).pointerEvents === "none",
+    ok("A7 补记面板还开着", q("sheetAdd").classList.contains("on"));
+    ok("A8 没有别的面板被弹出来", openSheets().join(",") === "sheetAdd", openSheets().join(","));
+    ok("A9 飘字不可点（纯提醒）", getComputedStyle(q("qiToast")).pointerEvents === "none",
        getComputedStyle(q("qiToast")).pointerEvents);
-    ok("A9 面板里没有常驻的挑图标入口", !q("qiIcBtn") && !document.querySelector(".ic-pick-row"));
-    /* 入口就是预览里那个分类图案：取消勾选时它带一圈虚线（表示能点），点了才开面板 */
-    ok("A10 取消勾选后预览图案变成可点", q("pvCat").classList.contains("ic-pickable"));
+    ok("A10 飘字同时把下面那排闪一下", q("catChips").classList.contains("hint"));
+    ok("A11 预览图案不再假装能点", !q("pvCat").classList.contains("ic-pickable"));
     q("pvCat").click();
-    ok("A11 点预览图案才开面板", q("sheetIc").classList.contains("on") && icPickMode === "manual",
-       icPickMode);
-    closeSheets();
+    ok("A12 点预览也不跳任何面板", openSheets().join(",") === "sheetAdd", openSheets().join(","));
 
-    openIcPick("", "manual");
-    ok("A9b 勾着自动识别时预览图案不可点", !q("pvCat").classList.contains("ic-pickable"));
-    ok("A9c 标题是「给这一笔挑个图标」", (q("icTitle").textContent || "").indexOf("给这一笔") === 0,
-       q("icTitle").textContent);
-    var cell = document.querySelector('#icPick [data-ic="🧴"]');
-    ok("A10 面板里能选到洗护那个图案", !!cell);
-    if(cell) cell.click();
-    ok("A11 挑的存进了待记的那一笔", state.manualIc === "🧴", state.manualIc);
+    /* 选图标的路只有一条：点下面那排分类 */
+    var chipA = document.querySelector('#catChips [data-cat="daily"]');
+    ok("A13 下面那排分类在", !!chipA);
+    if(chipA) chipA.click();
+    ok("A14 点一下就选上了", state.manualCat === "daily", String(state.manualCat));
+    ok("A15 预览跟着变", (q("pvCat").textContent || "").indexOf("日用") >= 0, q("pvCat").textContent);
 
-    q("icDone").click();
-    ok("A12 「用这个图标」回到补记面板", q("sheetAdd").classList.contains("on"));
-    ok("A13 挑图标那张收起来了", !q("sheetIc").classList.contains("on"));
-    ok("A14 刚打的字还在", q("qi").value === "吹头发 1", q("qi").value);
-    ok("A15 落脚话「图标选好了」", (q("qiToast").textContent || "").indexOf("图标选好了") >= 0,
-       q("qiToast").textContent);
-
+    q("qiToast").classList.remove("on"); q("qiToast").textContent = "";
     q("btnAdd").click();
-    ok("A16 这回记上了", state.records.length === n0 + 1, state.records.length);
-    var last = state.records[state.records.length - 1];
-    ok("A17 图标挂到这一笔上了", last && last.ic === "🧴", last && last.ic);
-    ok("A18 记完把手挑的清掉", state.manualIc === "", state.manualIc);
+    ok("A16 选了就能记上", state.records.length === n0 + 1, state.records.length + "/" + (n0 + 1));
+    var lastA = state.records[state.records.length - 1];
+    ok("A17 图标留空，明细行用分类图案", lastA && !lastA.ic, lastA && lastA.ic);
+    ok("A18 不再飘提示", !q("qiToast").classList.contains("on"), q("qiToast").textContent);
+    ok("A19 闪一下会自己收",
+       q("catChips").classList.contains("hint") === true);   // 计时器到点自己摘掉，这里只看它挂着不报错
 
-    /* 勾回去：手挑的作废 */
+    /* 勾回去：图标交回程序认 */
     q("qiAutoIc").checked = true; fire(q("qiAutoIc"), "change");
-    ok("A19 勾回来手挑的清空", state.manualIc === "");
-
-    /* 勾着的时候记一笔：图标留空，交给程序认 */
     openAddSheet(); typeIn("第一食堂 9"); q("btnAdd").click();
     var last2 = state.records[state.records.length - 1];
     ok("A20 自动模式下不硬塞图标", last2 && !last2.ic, last2 && last2.ic);
@@ -199,22 +191,11 @@
     state.manualCat = null; state.manualSub = null;
     previewManual();
 
-    /* 面板两种模式说两种话 —— 以前同一个面板同一句话，用户以为"根本没变化" */
-    var a2 = q("qiAutoIc"); a2.checked = false; fire(a2, "change");
-    openIcPick("", "manual");
-    ok("D4 手动模式标题是「给这一笔挑个图标」",
-       (q("icTitle").textContent || "").indexOf("给这一笔") === 0, q("icTitle").textContent);
-    ok("D5 副标题带上那句话", (q("icSub").textContent || "").indexOf("吹头发") >= 0, q("icSub").textContent);
-    ok("D6 按钮换成「用这个图标」", q("icDone").textContent === "用这个图标", q("icDone").textContent);
-    q("icDone").click();
-    ok("D7 点完回到补记面板", q("sheetAdd").classList.contains("on") &&
-       !q("sheetIc").classList.contains("on"));
-    ok("D8 挑图标那张收掉了", !q("sheetIc").classList.contains("on"));
-
-    /* 给已有账目换图标时，面板得保持原来那套话 */
-    openIcPick("r1");
-    ok("D9 换图标模式标题还是「挑个图标」", q("icTitle").textContent === "挑个图标", q("icTitle").textContent);
-    ok("D10 按钮是「好了」", q("icDone").textContent === "好了", q("icDone").textContent);
+    /* 挑图标那一屏已经被要求删掉了（2026-11-01 用户：别再跳到那个界面）。
+       以前这里两种模式说两种话，现在连面板都没有了 —— 断言它真的不在。 */
+    ok("D4 页面上没有挑图标那一屏", !q("sheetIc"));
+    ok("D5 也没有打开它的函数", typeof openIcPick !== "function", typeof openIcPick);
+    ok("D6 没有那一屏的标题/按钮", !q("icTitle") && !q("icSub") && !q("icDone"));
     closeSheets();
   }catch(e){ ok("D 段没抛异常", false, e.message); }
 
@@ -282,7 +263,7 @@
        q("pvCat").textContent);
     ok("F2 猜的理发不上屏", (q("pvCat").textContent || "").indexOf("理发") < 0,
        q("pvCat").textContent);
-    ok("F3 占位还带着虚线（能点）", q("pvCat").classList.contains("ic-pickable"));
+    ok("F3 占位只是提示，不再假装有虚线能点", !q("pvCat").classList.contains("ic-pickable"));
 
     /* ② 点了大类：预览立刻显示大类自己，细分不再背地里猜 */
     var chipF = document.querySelector('#catChips [data-cat="daily"]');
@@ -318,6 +299,46 @@
     ok("F9 自动模式预览照旧猜理发", (q("pvCat").textContent || "").indexOf("理发") >= 0,
        q("pvCat").textContent);
   }catch(e){ ok("F 段没抛异常", false, e.message); }
+
+  /* ================= G. 勾着「自动识别」时，下面那排图标照样能点（2026-11-01 用户提的）
+     原话「选择自动的时候可以点击下边的图标」。
+     自动归自动，用户临时想改成别的一类，点一下就得当场生效，
+     不能被程序猜的那个盖掉，也不能因为勾着自动就点了没反应。 */
+  try{
+    seed();
+    openAddSheet();
+    ok("G1 默认勾着自动识别", q("qiAutoIc").checked === true);
+
+    typeIn("第一食堂 9");
+    ok("G2 预览先按程序猜的显示", (q("pvCat").textContent || "").indexOf("餐饮") >= 0,
+       q("pvCat").textContent);
+
+    /* 勾着自动也能点下面那排 */
+    var chipG = document.querySelector('#catChips [data-cat="daily"]');
+    ok("G3 下面那排图标还在（没被自动模式藏起来）", !!chipG &&
+       getComputedStyle(chipG).display !== "none");
+    if(chipG) chipG.click();
+    ok("G4 点下去真选上了", state.manualCat === "daily", String(state.manualCat));
+    ok("G5 预览立刻换成手选的那一类", (q("pvCat").textContent || "").indexOf("日用") >= 0,
+       q("pvCat").textContent);
+    ok("G6 没跳出任何面板", openSheets().join(",") === "sheetAdd", openSheets().join(","));
+
+    var nG = state.records.length;
+    q("btnAdd").click();
+    ok("G7 自动模式下也能记上", state.records.length === nG + 1, state.records.length + "/" + (nG + 1));
+    var g1 = state.records[state.records.length - 1];
+    ok("G8 记的是手选的那一类，不是程序猜的", g1 && g1.cat === "daily", g1 && g1.cat);
+    ok("G9 不会飘「请选择一个图标」", !q("qiToast").classList.contains("on"), q("qiToast").textContent);
+
+    /* 再点一下同一颗 = 取消选中，回到程序猜的那个 */
+    openAddSheet();
+    typeIn("第一食堂 9");
+    var chipG2 = document.querySelector('#catChips [data-cat="daily"]');
+    if(chipG2) chipG2.click();
+    ok("G10 点两下取消选中", state.manualCat === null, String(state.manualCat));
+    ok("G11 预览回到程序猜的", (q("pvCat").textContent || "").indexOf("餐饮") >= 0,
+       q("pvCat").textContent);
+  }catch(e){ ok("G 段没抛异常", false, e.message); }
 
   p("VER", VER.name);
   p("ERR", (window.__errs || []).length ? window.__errs.join(" | ") : "none");

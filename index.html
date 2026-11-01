@@ -309,11 +309,9 @@ textarea#qi::placeholder{color:var(--ink3)}
 .preview{display:none;align-items:center;gap:7px;flex-wrap:wrap;padding:9px 0 0;border-top:1px dashed var(--line);margin-top:6px}
 .preview.show{display:flex}
 .pv-t{font-size:12.5px;font-weight:750;color:var(--ink);background:var(--line2);padding:4px 10px;border-radius:99px}
-/* 关掉「自动识别」之后，预览里这个分类图案就是挑图标的入口：点它一下就开。
-   不额外占一行（那行虚线已被用户要求删掉）、也不在点「记上」时自动弹面板。
-   加一圈虚线描边，不然没人知道这个小标签能点。 */
-.pv-t.ic-pickable{border:1px dashed var(--brand);background:var(--brandSoft);color:var(--brandInk);
-  cursor:pointer}
+/* 预览里这个分类图案**只是显示，不能点**（2026-11-01 用户定的）：
+   以前点它会弹出一整屏"挑个图标"的格子，用户原话「以后点东西不要再跳转到这个界面了」。
+   挑图标就点下面那排分类，一个入口、不跳页。 */
 .pv-a{font-size:13px;font-weight:800;color:var(--brandInk);background:var(--brandSoft);padding:4px 10px;border-radius:99px}
 /* 认出来的商户（2026-11-01 加）：以前预览只说「餐饮 ¥15.00」，
    不说认成哪家店，用户要等记完翻明细才知道「食堂吃饭」这种怪名字。 */
@@ -321,6 +319,14 @@ textarea#qi::placeholder{color:var(--ink3)}
   text-overflow:ellipsis;white-space:nowrap}
 .pv-h{font-size:11px;color:var(--ink3);margin-left:auto;font-weight:600}
 .cats{display:flex;flex-wrap:wrap;gap:6px;padding:10px 0 2px;overflow:visible}
+/* 没选图标点了「记上」时闪一下，告诉用户"在这儿挑一颗"。1.4 秒自己停，非常驻。 */
+.cats.hint{animation:catsHint 1.4s ease}
+.cats.hint .cat-chip{border-color:var(--brand);color:var(--brandInk)}
+@keyframes catsHint{
+  0%,100%{transform:translateX(0)}
+  15%{transform:translateX(-4px)} 35%{transform:translateX(4px)}
+  55%{transform:translateX(-3px)} 75%{transform:translateX(3px)}
+}
 .cats::-webkit-scrollbar{display:none}
 .cat-chip{
   flex:0 0 auto;display:flex;align-items:center;gap:4px;padding:6px 11px;border-radius:999px;
@@ -359,15 +365,6 @@ textarea#qi::placeholder{color:var(--ink3)}
   transition:opacity .22s ease, transform .22s ease;z-index:96}
 .qi-toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
 html[data-dark="1"] .qi-toast{background:#3B3122;border-color:#4E4130;color:#E7C77E}
-/* 挑图标：7 列铺满，格子正方形。emoji 单独一级字号，不受父容器影响。 */
-.ic-pick{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:10px;
-  max-height:40vh;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:1px}
-.ic-pick button{aspect-ratio:1/1;display:grid;place-items:center;line-height:1;
-  font-size:19px;border:1px solid var(--line);border-radius:11px;
-  background:var(--card2);color:inherit}
-.ic-pick button:active{transform:scale(.92)}
-.ic-pick button.on{border-color:var(--brand);background:var(--brandSoft);
-  box-shadow:inset 0 0 0 1px var(--brand)}
 /* 「全部分类」面板：按主分类分组，每组一行细分（2026-10-28 加）。
    以前这里原样又列一遍那 11 个主分类，跟外面完全一样，点了等于白点。 */
 #catGrid{display:block;max-height:46vh;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-right:2px}
@@ -1572,16 +1569,6 @@ window.XZB_PERSONALIZE = false;
   <div class="sr-catgrid" id="catGrid"></div>
 </div>
 
-<!-- 给这一笔单独挑图标（2026-11-01）：补记面板里取消勾「自动识别」之后弹出来。
-     格子里的图案来自分类/细分的 emoji + 一组常用的，去重后铺成网格。
-     挑中的值存进记录的 ic 字段，明细行优先用它，压过品牌识别。 -->
-<div class="sheet" id="sheetIc">
-  <div class="grip"></div>
-  <h3 id="icTitle">挑个图标</h3>
-  <div class="sh-sub" id="icSub">这一笔在明细里显示哪个图案</div>
-  <div class="ic-pick" id="icPick"></div>
-  <button class="btn-main" id="icDone" style="margin-top:12px;width:100%">好了</button>
-</div>
 
 </div>
 
@@ -7384,7 +7371,7 @@ function openAddSheet(){
       而且是系统弹窗，不算跳浏览器。网页版没有原生壳，才退回浏览器下载。
    地址填几个就按顺序试几个，先回的算——一个挂了不影响。
    ===================================================================== */
-const VER = {code: 118, name: "1.6.111"};
+const VER = {code: 119, name: "1.6.112"};
 
 /* 更新说明就一句话。
    以前这里堆着三五条，弹窗被撑到顶到屏幕外，用户原话「简洁一点」。
@@ -8163,7 +8150,7 @@ function previewManual(){
       : _ms ? (gicon(_ms.k, _ms.e) + " " + esc(_ms.n))
       : _rs ? (gicon(_rs.k, _rs.e) + " " + esc(_rs.n))
       : _mc ? (gicon(_mc.k, _mc.e) + " " + esc(_mc.n))
-      : "＋ 图标";
+      : "＋ 选个图标";
   } else {
     /* 手挑的图标用原样 emoji —— 明细行对手挑图标就是直接显示原图案（it-ic emo），
        预览要跟最终结果长一样，不能这边画线条版、那边是 emoji。 */
@@ -8205,66 +8192,9 @@ function previewManual(){
   pv.classList.add("show");
 }
 
-/* =====================================================================
-   给单笔挑图标（2026-11-01）
-   ===================================================================== */
-/* 能挑的图案：11 个主分类 + 全部细分 + 一组常用的，去重后铺网格。
-   分类在前、生活图案在后，顺序稳定，用户第二次找同一颗还在老位置。 */
-function iconChoices(){
-  const out = [], seen = {};
-  const push = e => {
-    e = String(e || "").trim();
-    if(e && !seen[e]){ seen[e] = 1; out.push(e); }
-  };
-  CATS.forEach(c => push(c.e));
-  SUBS.forEach(s => push(s.e));
-  ["🍔","🍜","🍰","🍉","🍖","🍳","🍱","🥗","💊","📱","💻","👕","👟","🧴","💈","🛁",
-   "🎬","🎮","📚","✏️","💡","🎁","🚗","✈️","🏠","💧","🐱","🌷","🎵","⚽","💄","🧸"]
-    .forEach(push);
-  return out;
-}
-
-let icPickId = "", icPickMode = "rec";
-/* 两种用法：
-   · 不给模式 = 给一笔**已经记下**的账换图标（点明细里的图案、补记后改），选中即落库；
-   · mode="manual" = 给**还没记**的那一笔挑（记一笔面板里关掉自动识别后点那行），
-     只存在 state.manualIc 里，等「记上」那天才写进账。
-   以前只有第一种，所以关掉自动识别之后是「先记账、再补挑」——
-   挑不挑那笔账都记完了，用户说「那这个勾选框是干嘛的」。 */
-function openIcPick(id, mode){
-  const manual = mode === "manual";
-  const r = id ? state.records.find(x => x.id === id) : null;
-  const box = $("icPick");
-  if(!box || (!r && !manual)) return;
-  icPickId = id || "";
-  icPickMode = manual ? "manual" : "rec";
-  const cur = String(manual ? (state.manualIc || "") : (r.ic || "")).trim();
-  /* 两种模式长得一样 = 用户以为"点进去还是原来那个面板，根本没变化"（2026-11-01）。
-     所以标题、副标题、按钮全换：进来的第一眼就知道"这是在给还没记的这一笔挑"。 */
-  const _it = $("icTitle"), _is = $("icSub"), _idn = $("icDone");
-  if(manual){
-    const _txt = String(($("qi") && $("qi").value || "").trim());
-    if(_it) _it.textContent = "给这一笔挑个图标";
-    if(_is) _is.textContent = (_txt ? _txt.slice(0, 14) + " · " : "") + "挑好点下面按钮，回来再点「记上」";
-    if(_idn) _idn.textContent = "用这个图标";
-  } else {
-    if(_it) _it.textContent = "挑个图标";
-    if(_is) _is.textContent = "这一笔在明细里显示哪个图案";
-    if(_idn) _idn.textContent = "好了";
-  }
-  box.innerHTML = iconChoices().map(e =>
-    '<button type="button" data-ic="' + esc(e) + '"' +
-    (e === cur ? ' class="on"' : '') + '>' + esc(e) + '</button>').join("");
-  box.querySelectorAll("[data-ic]").forEach(b => {
-    b.onclick = () => {
-      if(manual){ state.manualIc = b.dataset.ic; }
-      else { r.ic = b.dataset.ic; save(); renderFlow(); renderHome(); }
-      box.querySelectorAll("[data-ic]").forEach(x => x.classList.remove("on"));
-      b.classList.add("on");
-    };
-  });
-  openSheet("sheetIc");
-}
+/* 2026-11-01 用户定的：记一笔时不再有「挑个图标」那一屏 ——
+   点预览、点分类都不许再跳出去。要选图标就点下面那排分类（或「＋ 更多」挑细分）。
+   那一屏（#sheetIc / openIcPick / iconChoices）已整段删除。 */
 
 /* 底部飘一行淡字，2.6 秒后自己淡掉（跟通知栏一个路数）。
    专门给「请选择一个图标」这类一句话的提醒用 —— 不用 modal、不用 alert、不打断输入。 */
@@ -8279,14 +8209,27 @@ function toastTip(msg){
   el.classList.add("on");
   _qiTipTimer = setTimeout(() => el.classList.remove("on"), 2600);
 }
-/* 勾上「自动识别」= 图标归程序猜，手上挑的那个作废；取消勾选 = 自己挑，
-   入口就是预览里那个分类图案（点一下开挑图标），不再另起一行、也不自动弹面板。 */
+/* 「请选择一个图标」时，光飘一行字，用户还是不知道去哪儿选 ——
+   所以顺手把下面那排分类闪一下（1.4 秒自己停），指着那儿。
+   只闪一下就收，不是常驻小字，也不弹任何面板。 */
+let _catHintTimer = 0;
+function hintCatChips(){
+  const box = $("catChips");
+  if(!box) return;
+  box.classList.remove("hint");
+  void box.offsetHeight;                 // 强制重排，连点两次也能再闪一遍
+  box.classList.add("hint");
+  clearTimeout(_catHintTimer);
+  _catHintTimer = setTimeout(() => box.classList.remove("hint"), 1400);
+}
+/* 勾上「自动识别」= 图标归程序猜，手上挑的那个作废；取消勾选 = 自己挑。
+   「自己挑」的地方就是下面那排分类（点一颗 = 选好图标），
+   2026-11-01 用户明确要求：**点什么都不能再弹出挑图标那一屏**。 */
 function syncQiIc(){
   const a = $("qiAutoIc"), pv = $("pvCat");
   if(!a) return;
-  const manual = !a.checked;
   if(a.checked) state.manualIc = "";      // 交给程序猜，手挑的作废
-  if(pv) pv.classList.toggle("ic-pickable", manual);
+  if(pv) pv.classList.remove("ic-pickable");
   /* 勾选状态一变，预览立刻重画 —— 用户是先打字再取消勾选的，
      不重画的话预览里还挂着切换前猜的「理发」，看着就像没关掉（2026-11-01）。 */
   if(typeof previewManual === "function") previewManual();
@@ -8316,6 +8259,7 @@ function commitManual(){
      两条都没走才提示。他截图里就是点了「纸品」却被拦下的情况。 */
   if(_autoIcBox && !_autoIcBox.checked && !_manualIc && !state.manualCat && !state.manualSub){
     toastTip("请选择一个图标");
+    hintCatChips();
     return;
   }
   let firstId = "";
@@ -8911,23 +8855,9 @@ function bind(){
   };
   /* 勾选「自动识别」↔「自己挑」：只换那一行的显隐，不改别的 */
   if($("qiAutoIc")) $("qiAutoIc").onchange = syncQiIc;
-  /* 点了预览里那个分类图案 → 挑图标（只有在关掉自动识别时才需要挑） */
-  if($("pvCat")) $("pvCat").onclick = () => {
-    const a = $("qiAutoIc");
-    if(a && !a.checked) openIcPick("", "manual");
-  };
-  /* 「挑个图标」的好了：从记一笔进来的回到记一笔（别把刚打的字关掉），
-     给已有账目换图标的就直接收起面板 */
-  if($("icDone")) $("icDone").onclick = () => {
-    /* 必须先把挑图标那张收掉：openSheet 只负责加 on，两张都开着时
-       后来的 sheetIc 叠在上面，看着像"点了好了没反应"。 */
-    if(icPickMode === "manual"){
-      closeSheets(); openSheet("sheetAdd"); fillChips(); previewManual();
-      if(String(state.manualIc || "")) toastTip("图标选好了");
-      return;
-    }
-    closeSheets();
-  };
+  /* 预览里那个分类图案**不给点**（2026-11-01 用户原话：
+     「以后点东西不要再跳转到这个界面了」）。它只负责显示"记上以后长什么样"，
+     要改就点下面那排分类 —— 一个入口，不再跳到挑图标那一屏。 */
   syncQiIc();
 
   /* 备注框 */
