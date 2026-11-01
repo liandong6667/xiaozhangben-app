@@ -7384,7 +7384,7 @@ function openAddSheet(){
       而且是系统弹窗，不算跳浏览器。网页版没有原生壳，才退回浏览器下载。
    地址填几个就按顺序试几个，先回的算——一个挂了不影响。
    ===================================================================== */
-const VER = {code: 117, name: "1.6.110"};
+const VER = {code: 118, name: "1.6.111"};
 
 /* 更新说明就一句话。
    以前这里堆着三五条，弹窗被撑到顶到屏幕外，用户原话「简洁一点」。
@@ -8147,11 +8147,29 @@ function previewManual(){
      预览这个胶囊就是"记上以后明细行长什么样"，图标必须跟最终一致。 */
   const _mIc = String(state.manualIc || "").trim();
   const _pvLabel = esc(sb ? sb.n : c.n);
-  /* 手挑的图标用原样 emoji —— 明细行对手挑图标就是直接显示原图案（it-ic emo），
-     预览要跟最终结果长一样，不能这边画线条版、那边是 emoji。 */
-  $("pvCat").innerHTML = _mIc ? (esc(_mIc) + " " + _pvLabel)
-    : sb ? (gicon(sb.k, sb.e) + " " + _pvLabel)
-         : (gicon(c.k, c.e) + " " + _pvLabel);
+  const _autoBox = $("qiAutoIc");
+  const _autoOff = !!(_autoBox && !_autoBox.checked);
+  if(_autoOff){
+    /* 手动模式（关掉自动识别）下，预览只显示**用户自己定的**东西，
+       词表猜的一个字都不上屏 —— 2026-11-01 用户原话
+       「我明明没开自动识别，但是它还是识别了」「我明明选的是日用，但是它还是记理发」。
+       显示顺序跟 commitManual 记账的顺序一字不差：
+       手选细分 > 教过的细分 > 手选大类 > 什么都没选（占位「＋ 图标」，点它去挑）。 */
+    const _ms = state.manualSub ? subOf(state.manualSub) : null;
+    const _rs = (!_ms && _ruleSub) ? subOf(_ruleSub) : null;
+    const _mc = (!_ms && !_rs && state.manualCat) ? catOf(state.manualCat) : null;
+    $("pvCat").innerHTML = _mIc
+      ? (esc(_mIc) + (_ms ? " " + esc(_ms.n) : _rs ? " " + esc(_rs.n) : _mc ? " " + esc(_mc.n) : ""))
+      : _ms ? (gicon(_ms.k, _ms.e) + " " + esc(_ms.n))
+      : _rs ? (gicon(_rs.k, _rs.e) + " " + esc(_rs.n))
+      : _mc ? (gicon(_mc.k, _mc.e) + " " + esc(_mc.n))
+      : "＋ 图标";
+  } else {
+    /* 手挑的图标用原样 emoji —— 明细行对手挑图标就是直接显示原图案（it-ic emo），
+       预览要跟最终结果长一样，不能这边画线条版、那边是 emoji。 */
+    $("pvCat").innerHTML = sb ? (gicon(sb.k, sb.e) + " " + _pvLabel)
+                              : (gicon(c.k, c.e) + " " + _pvLabel);
+  }
   /* 顺手把「认成哪家店」也念出来（2026-11-01 用户报）：
      以前预览只有分类 + 金额，商户名要记完翻明细才看得到，
      而它就是最容易认错的那一项（「中午食堂吃饭15」会记成「食堂吃饭」）。
@@ -8269,6 +8287,9 @@ function syncQiIc(){
   const manual = !a.checked;
   if(a.checked) state.manualIc = "";      // 交给程序猜，手挑的作废
   if(pv) pv.classList.toggle("ic-pickable", manual);
+  /* 勾选状态一变，预览立刻重画 —— 用户是先打字再取消勾选的，
+     不重画的话预览里还挂着切换前猜的「理发」，看着就像没关掉（2026-11-01）。 */
+  if(typeof previewManual === "function") previewManual();
 }
 
 function commitManual(){
@@ -8320,9 +8341,12 @@ function commitManual(){
          一笔里点了两样的（名称里有「 + 」）**不挂单一细分** ——
          挂哪个都在吞另一样，交给明细行并排显示两个图案、右边写大类「餐饮」。
          多条时只拿这一行自己的名字，不拿整段原文，免得串味。 */
-      /* 手上选的细分 > 教过的细分（洗护）> 现场按名字猜（会猜成理发） */
+      /* 手上选的细分 > 教过的细分（洗护）> 点了**大类没点细分**（就按大类记，
+         2026-11-01 用户原话「我明明选的是日用，但是它还是记理发」——
+         他点了日用，程序不该再背着他把细分猜成理发）> 现场按名字猜 */
       sub: (i === 0 && state.manualSub) ? state.manualSub
         : (_rule && _rule.s && _rule.c === _cat) ? _rule.s
+        : (state.manualCat && !state.manualSub) ? ""
         : (/ \+ /.test(r.note || "") ? ""
           : subGuess((r.note || "") + " " + (res.length === 1 ? txt : ""), _cat)),
       guessed: false, peer: r.note || "", note: i === 0 ? memo : "",

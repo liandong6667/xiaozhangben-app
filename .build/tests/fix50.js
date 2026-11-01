@@ -266,6 +266,59 @@
        q("pvCat").textContent);
   }catch(e){ ok("E 段没抛异常", false, e.message); }
 
+  /* ================= F. 关掉自动识别后，程序不许再自作主张（2026-11-01 第二轮反馈） =========
+     用户原话三条：
+     ①「我明明没开自动识别，但是它还是识别了」—— 预览还显示词表猜的「理发」；
+     ②「我明明选的是日用，但是它还是记理发」—— 点了大类，细分照样被背地里猜掉；
+     ③ 预览必须跟记上以后的结果一字不差。 */
+  try{
+    seed();
+    openAddSheet();
+    q("qiAutoIc").checked = false; fire(q("qiAutoIc"), "change");
+    typeIn("吹头发 1");
+
+    /* ① 什么都没选：预览只给一个「＋ 图标」占位，猜出来的理发不许上屏 */
+    ok("F1 预览是「＋ 图标」占位", (q("pvCat").textContent || "").indexOf("图标") >= 0,
+       q("pvCat").textContent);
+    ok("F2 猜的理发不上屏", (q("pvCat").textContent || "").indexOf("理发") < 0,
+       q("pvCat").textContent);
+    ok("F3 占位还带着虚线（能点）", q("pvCat").classList.contains("ic-pickable"));
+
+    /* ② 点了大类：预览立刻显示大类自己，细分不再背地里猜 */
+    var chipF = document.querySelector('#catChips [data-cat="daily"]');
+    if(chipF) chipF.click();
+    ok("F4 预览显示日用", (q("pvCat").textContent || "").indexOf("日用") >= 0,
+       q("pvCat").textContent);
+    ok("F5 预览不再写理发", (q("pvCat").textContent || "").indexOf("理发") < 0,
+       q("pvCat").textContent);
+
+    var nF = state.records.length;
+    q("btnAdd").click();
+    ok("F6 点过大类能记上", state.records.length === nF + 1, state.records.length);
+    var f1 = state.records[state.records.length - 1];
+    ok("F7 记的是日用大类", f1 && f1.cat === "daily", f1 && f1.cat);
+    ok("F8 细分留空，不再猜成理发", f1 && !f1.sub, f1 && f1.sub);
+
+    /* ④ 先打字（自动模式猜出理发）再取消勾选：预览必须立刻换成占位 ——
+        2026-11-01 用户看到的「还是识别了」就是切换后没重画的旧画面 */
+    openAddSheet();
+    state.manualCat = null; state.manualSub = null; state.manualIc = "";
+    typeIn("吹头发 3");
+    ok("F9a 勾着时预览是理发", (q("pvCat").textContent || "").indexOf("理发") >= 0,
+       q("pvCat").textContent);
+    q("qiAutoIc").checked = false; fire(q("qiAutoIc"), "change");
+    ok("F9b 取消勾选立刻换成「＋ 图标」", (q("pvCat").textContent || "").indexOf("图标") >= 0 &&
+       (q("pvCat").textContent || "").indexOf("理发") < 0, q("pvCat").textContent);
+
+    /* ③ 自动模式不受影响：勾回来预览照旧会猜 */
+    openAddSheet();
+    q("qiAutoIc").checked = true; fire(q("qiAutoIc"), "change");
+    state.manualCat = null; state.manualSub = null;
+    typeIn("吹头发 2");
+    ok("F9 自动模式预览照旧猜理发", (q("pvCat").textContent || "").indexOf("理发") >= 0,
+       q("pvCat").textContent);
+  }catch(e){ ok("F 段没抛异常", false, e.message); }
+
   p("VER", VER.name);
   p("ERR", (window.__errs || []).length ? window.__errs.join(" | ") : "none");
   document.title = all + "/" + all + " || " + (bad ? R.filter(function(x){ return x.charAt(0) === "N"; }).join(" | ") : "全过");
