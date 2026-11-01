@@ -324,11 +324,33 @@ textarea#qi::placeholder{color:var(--ink3)}
 }
 .cat-chip:active{transform:scale(.95)}
 .cat-chip.on{background:var(--brandSoft);border-color:transparent;color:var(--brandInk)}
-/* 「＋ 更多」是个入口，不是第 12 个分类（2026-11-01 用户报：白底黑字跟旁边一模一样，
-   根本看不出这里能点）。先用过实心品牌色，用户嫌"颜色太深"，于是换成
-   **淡品牌底 + 品牌字 + 品牌描边**：比旁边的白底芯片一眼分得出来，又不抢眼。
-   深色模式下 --brandSoft / --brandInk 本身就是深底亮字，不用另写一条。 */
-.cat-chip.cat-add{background:var(--brandSoft);border-color:var(--brand);color:var(--brandInk);font-weight:800}
+/* 「＋ 更多」是个入口，不是第 12 个分类。这行的颜色改过三轮，每次的原因都得留着：
+   ① 一开始白底黑字，跟旁边十一颗一模一样，看不出能点；
+   ② 改成实心品牌色，又太扎眼；
+   ③ 改成"淡品牌底 + 品牌字 + 品牌描边" —— 结果撞上了**选中态**：
+      .cat-chip.on 也是 background:var(--brandSoft) / color:var(--brandInk)，
+      两件衣服一模一样，选中「服饰」时右边这颗看着像也选中了（2026-11-01 用户报）。
+   所以现在换一种**形状**区分，而不是继续调颜色：透明底 + 虚线边框。
+   虚线在任何设计语言里都读作"这里还能加东西"，跟实心/淡底的分类芯片天然分开，
+   换肤、深色模式也都不用另写一套。 */
+.cat-chip.cat-add{background:transparent;border:1px dashed var(--brand);color:var(--brandInk);font-weight:800}
+/* 「自动识别该笔账单图标」这一行（2026-11-01）。
+   11.5px 是跟备注框占位提示同一档，视觉上属于"说明"而不是"控件"；
+   方框本身用 accent-color 跟着品牌色走，换肤不用另写。
+   margin 上下都留了，免得贴着上面按钮、又压到下面分类。 */
+.ic-auto{display:flex;align-items:center;gap:6px;margin:10px 0 2px;
+  font-size:11.5px;color:var(--ink2);cursor:pointer;user-select:none;-webkit-user-select:none}
+.ic-auto input{width:15px;height:15px;margin:0;accent-color:var(--brand);flex:0 0 auto}
+.ic-auto span{line-height:1.35}
+/* 挑图标：7 列铺满，格子正方形。emoji 单独一级字号，不受父容器影响。 */
+.ic-pick{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:10px;
+  max-height:40vh;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:1px}
+.ic-pick button{aspect-ratio:1/1;display:grid;place-items:center;line-height:1;
+  font-size:19px;border:1px solid var(--line);border-radius:11px;
+  background:var(--card2);color:inherit}
+.ic-pick button:active{transform:scale(.92)}
+.ic-pick button.on{border-color:var(--brand);background:var(--brandSoft);
+  box-shadow:inset 0 0 0 1px var(--brand)}
 /* 「全部分类」面板：按主分类分组，每组一行细分（2026-10-28 加）。
    以前这里原样又列一遍那 11 个主分类，跟外面完全一样，点了等于白点。 */
 #catGrid{display:block;max-height:46vh;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-right:2px}
@@ -1502,6 +1524,11 @@ window.XZB_PERSONALIZE = false;
     <button class="btn-main" id="btnAdd">记上</button>
     <button class="btn-ghost" id="btnClear">清空</button>
   </div>
+  <!-- 图标谁说了算（2026-11-01 用户提的）：默认让程序按店名/菜名自己认，
+       不想让它瞎认就取消勾选，记完之后弹一个面板自己挑一个。
+       位置定在「记上/清空」下面单独一行 —— 塞进分类区右上角的话，
+       窄屏那一行已经排了 4 颗标签，会被挤掉。 -->
+  <label class="ic-auto"><input type="checkbox" id="qiAutoIc" checked><span>自动识别该笔账单图标</span></label>
   <div class="cats" id="catChips"></div>
 </div>
 
@@ -1516,6 +1543,17 @@ window.XZB_PERSONALIZE = false;
   </div>
   <div class="sh-sub" id="catSub">按大类分组，能选更细一档：咖啡、奶茶、面食…</div>
   <div class="sr-catgrid" id="catGrid"></div>
+</div>
+
+<!-- 给这一笔单独挑图标（2026-11-01）：补记面板里取消勾「自动识别」之后弹出来。
+     格子里的图案来自分类/细分的 emoji + 一组常用的，去重后铺成网格。
+     挑中的值存进记录的 ic 字段，明细行优先用它，压过品牌识别。 -->
+<div class="sheet" id="sheetIc">
+  <div class="grip"></div>
+  <h3>挑个图标</h3>
+  <div class="sh-sub">这一笔在明细里显示哪个图案</div>
+  <div class="ic-pick" id="icPick"></div>
+  <button class="btn-main" id="icDone" style="margin-top:12px;width:100%">好了</button>
 </div>
 
 </div>
@@ -1866,6 +1904,9 @@ const CATS = [
     "洗发水","沐浴露","护发素","牙膏","牙刷","毛巾","浴巾","纸巾","抽纸","卫生纸","卷纸","洗衣液","洗衣粉","柔软剂",
     "肥皂","香皂","洗手液","洗面奶","护肤品","水乳","面霜","防晒","面膜","剃须刀","剃须","拖鞋","垃圾袋","电池",
     "指甲刀","雨伞","衣架","洗发","洗澡","澡堂","洗漱","洗衣服","洗衣房","洗衣","理发","剪头","日用品","日用","超市","便利店","沃尔玛","永辉",
+    /* 2026-11-01 用户报「吹头发1块」进待分类：理发那栏只收了「理发/剪头」，
+       口语里的「吹头发」「洗头」「剪发」一个都不在。 */
+    "吹头发","吹头","洗头","剪发","美发","烫头","染头","洗吹",
     "大润发","小卖部","沐浴","卫生巾","湿巾","驱蚊","蚊香","插座","晾衣","拖把","扫把","清洁","收纳","名创优品" ]},
   {k:"transport",n:"交通",e:"🚦",c:"#5B8DEF",t:"out",w:[
     "地铁","公交","巴士","打车","打的","滴滴","网约车","出租车","的士","高德打车","曹操出行","t3出行","高铁","火车",
@@ -2069,7 +2110,7 @@ const SUB_W = {
   clean:     ["洗发水","沐浴露","洗面奶","牙膏","牙刷","护肤","面膜","香皂","洗手液"],
   paper:     ["纸巾","抽纸","卫生纸","卷纸","湿巾","卫生巾"],
   laundry:   ["洗衣","洗衣液","洗衣房","干洗"],
-  hair:      ["理发","剪头","烫发","染发"],
+  hair:      ["吹头发","吹头","洗头","剪发","美发","烫头","染头","洗吹","理发","剪头","烫发","染发"],
   market:    ["超市","便利店","沃尔玛","永辉","大润发","小卖部"],
 
   metro:     ["地铁"],
@@ -3201,7 +3242,15 @@ function load(){
         from: r.from || "",
         /* 细分（咖啡/奶茶…）。不认识的 key 直接丢掉，别把一个脏字符串
            塞进 subOf() 里 —— 明细行会显示成空白标签。 */
-        sub: (r.sub && (SUB_MAP[r.sub] || isCustomSub(r.sub))) ? r.sub : ""
+        sub: (r.sub && (SUB_MAP[r.sub] || isCustomSub(r.sub))) ? r.sub : "",
+        /* 用户给这一笔单独挑的图标（emoji）。这里是一份**白名单**，
+           不补这一行，挑完的图标下次打开就没了（存是存了，读的时候被扔掉）。
+           带尖括号、或者长得不像一个图案的，一律退回分类图案 ——
+           它最后会进 innerHTML。 */
+        ic: (function(){
+          const v = String(r.ic == null ? "" : r.ic).trim();
+          return (v && [...v].length <= 4 && !/[<>]/.test(v)) ? v : "";
+        })()
       });
     });
     state.peerRules = d.peerRules || {};
@@ -4634,6 +4683,16 @@ function itemHTML(r){
        gicon 内部对不认识的 emoji 会 esc 后原样吐出，安全兜底。 */
     icInner = em.charAt(0) === "<" ? em
       : gicon((cS && em === cE) ? cS.k : "", em, "inherit");
+    txtColor = c ? c.c : "";
+  }
+  /* 用户给这一笔单独挑过图标（补记里取消「自动识别」时挑的）：
+     压过品牌识别和分类图案。底色仍用分类淡色 —— 图案是自己选的，
+     背景再跟着品牌走，会变成"麦当劳的红底配一个药丸"。 */
+  const ownIc = String(r.ic || "").trim();
+  if(ownIc){
+    icCls = "it-ic emo";
+    icInner = esc(ownIc);
+    bg = c ? hexA(c.c, .14) : "var(--line2)";
     txtColor = c ? c.c : "";
   }
   /* 用 brShow（真正要画出来的那个）而不是 br ——
@@ -7220,7 +7279,7 @@ function openAddSheet(){
       而且是系统弹窗，不算跳浏览器。网页版没有原生壳，才退回浏览器下载。
    地址填几个就按顺序试几个，先回的算——一个挂了不影响。
    ===================================================================== */
-const VER = {code: 110, name: "1.6.103"};
+const VER = {code: 111, name: "1.6.104"};
 
 /* GitHub 仓库，格式 "用户名/仓库名"。
    ------------------------------------------------------------------
@@ -7963,6 +8022,47 @@ function previewManual(){
   pv.classList.add("show");
 }
 
+/* =====================================================================
+   给单笔挑图标（2026-11-01）
+   ===================================================================== */
+/* 能挑的图案：11 个主分类 + 全部细分 + 一组常用的，去重后铺网格。
+   分类在前、生活图案在后，顺序稳定，用户第二次找同一颗还在老位置。 */
+function iconChoices(){
+  const out = [], seen = {};
+  const push = e => {
+    e = String(e || "").trim();
+    if(e && !seen[e]){ seen[e] = 1; out.push(e); }
+  };
+  CATS.forEach(c => push(c.e));
+  SUBS.forEach(s => push(s.e));
+  ["🍔","🍜","🍰","🍉","🍖","🍳","🍱","🥗","💊","📱","💻","👕","👟","🧴","💈","🛁",
+   "🎬","🎮","📚","✏️","💡","🎁","🚗","✈️","🏠","💧","🐱","🌷","🎵","⚽","💄","🧸"]
+    .forEach(push);
+  return out;
+}
+
+let icPickId = "";
+function openIcPick(id){
+  const r = id ? state.records.find(x => x.id === id) : null;
+  const box = $("icPick");
+  if(!box || !r) return;
+  icPickId = id;
+  const cur = String(r.ic || "").trim();
+  box.innerHTML = iconChoices().map(e =>
+    '<button type="button" data-ic="' + esc(e) + '"' +
+    (e === cur ? ' class="on"' : '') + '>' + esc(e) + '</button>').join("");
+  box.querySelectorAll("[data-ic]").forEach(b => {
+    b.onclick = () => {
+      r.ic = b.dataset.ic;
+      save();
+      box.querySelectorAll("[data-ic]").forEach(x => x.classList.remove("on"));
+      b.classList.add("on");
+      renderFlow(); renderHome();
+    };
+  });
+  openSheet("sheetIc");
+}
+
 function commitManual(){
   const txt = $("qi").value.trim();
   /* 手填的备注（选填）。和分类一样只作用于第一笔 ——
@@ -7972,11 +8072,21 @@ function commitManual(){
   if(!txt){ toast("写点什么，比如「午饭15」"); return; }
   const res = parseText(txt, Date.now(), state.manualType);
   if(!res.length){ toast("没认出金额，带上数字试试"); return; }
+  let firstId = "";
   res.forEach((r, i) => {
+    /* 2026-11-01 用户报：把「吹头发」手动分成洗护、勾了「以后都算这一类」，
+       再记一笔照样进待分类。根因是这条规则**只有导入流程读**（autoClassify），
+       补记这条路完全不看它 —— 规则写进去了却没人用。
+       顺序跟导入保持一致：面板上手选的 > 用户教过的 > 词表猜的。 */
+    const _peer = r.note || "";
+    const _rule = (_peer && state.peerRules && state.peerRules[_peer]) || null;
+    const _cat = i === 0 ? (state.manualCat || _rule || r.cat) : (_rule || r.cat);
+    const _id = uid();
+    if(i === 0) firstId = _id;
     state.records.push({
       // 用 r.type（由文本判断），不再强塞 state.manualType
-      id: uid(), amt: r.amt, type: r.type,
-      cat: i === 0 ? (state.manualCat || r.cat) : r.cat,
+      id: _id, amt: r.amt, type: r.type,
+      cat: _cat,
       /* 细分只跟着第一笔走（用户在界面上选的分类也只作用于第一笔，跟 cat 一致）。
          统计永远按 cat 算，sub 只是让明细行显示「咖啡」而不是笼统的「餐饮」。 */
       /* 细分只跟着第一笔的分类走（跟 cat 一致），但每条都能自己猜出来：
@@ -7986,11 +8096,10 @@ function commitManual(){
          多条时只拿这一行自己的名字，不拿整段原文，免得串味。 */
       sub: (i === 0 && state.manualSub) ? state.manualSub
         : (/ \+ /.test(r.note || "") ? ""
-          : subGuess((r.note || "") + " " + (res.length === 1 ? txt : ""),
-              i === 0 ? (state.manualCat || r.cat) : r.cat)),
+          : subGuess((r.note || "") + " " + (res.length === 1 ? txt : ""), _cat)),
       guessed: false, peer: r.note || "", note: i === 0 ? memo : "",
       ts: r.ts, src: "manual",
-      book: pickBook(i === 0 ? (state.manualCat || r.cat) : r.cat)
+      book: pickBook(_cat)
     });
   });
   save();
@@ -8004,6 +8113,14 @@ function commitManual(){
   if(res.length > 1) toast("记了 " + res.length + " 笔 ✓");
   else if(flipped) toast("按文字记成了" + (res[0].type === "income" ? "收入" : "支出") + " ✓");
   else toast("记上了 ✓");
+  /* 没勾「自动识别」= 用户要自己挑图标：把补记面板收起来，直接换挑图标的面板。
+     同步切换而不是延时 —— 两张面板都在底部同一位置，看起来像内容替换，
+     延时反而会先闪一下空白。 */
+  const autoIc = $("qiAutoIc");
+  if(firstId && autoIc && !autoIc.checked){
+    closeSheets();
+    openIcPick(firstId);
+  }
 }
 
 /* =====================================================================
@@ -8678,7 +8795,12 @@ function applyBackup(d){
       // 来源 App 同理，丢了明细里就只剩「一笔支出」了
       from: r.from || "",
       // 细分（咖啡/奶茶…）也要跟着备份走，否则恢复后账单全退回笼统的「餐饮」
-      sub: (r.sub && (SUB_MAP[r.sub] || isCustomSub(r.sub))) ? r.sub : ""
+      sub: (r.sub && (SUB_MAP[r.sub] || isCustomSub(r.sub))) ? r.sub : "",
+      // 用户挑过的图标也得跟着备份走，否则换机恢复后满屏退回分类图案
+      ic: (function(){
+        const v = String(r.ic == null ? "" : r.ic).trim();
+        return (v && [...v].length <= 4 && !/[<>]/.test(v)) ? v : "";
+      })()
     };
     const fp = fpStrict(rec);
     let rid = r.id ? String(r.id) : "";

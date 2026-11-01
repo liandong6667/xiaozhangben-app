@@ -66,13 +66,16 @@
       var more = document.getElementById("chipMore");
       ok("C1 那个按钮还在", !!more);
       var addRule = rule(".cat-chip.cat-add");
-      /* 2026-11-01 用户改口径：实心品牌色"颜色太深"，换成淡品牌底 + 品牌字 + 品牌描边，
-         要求"能跟旁边白底芯片区分就行"。C2/C3 跟着反过来。 */
-      ok("C2 是淡品牌底（不是白底、也不再是实心深色）",
-         addRule.indexOf("background:var(--brandSoft)") >= 0 &&
-         addRule.indexOf("background:var(--brand);") < 0);
+      /* 2026-11-01 第二轮：上一版的"淡品牌底"跟**选中态**撞了 ——
+         .cat-chip.on 的 background 和 color 跟它一模一样，只差一个边框，
+         用户看到的是"更多跟选中的图标重叠"。这次改用**形状**区分：
+         透明底 + 品牌色虚线。断言跟着事实改，别再守着旧配色。 */
+      ok("C2 改成透明底，不再跟选中态共用淡品牌底",
+         addRule.indexOf("background:transparent") >= 0 &&
+         addRule.indexOf("background:var(--brandSoft)") < 0);
       ok("C3 用品牌深字，不是白字", addRule.indexOf("color:var(--brandInk)") >= 0);
-      ok("C4 加了品牌描边，跟白底芯片分得开", addRule.indexOf("border-color:var(--brand)") >= 0);
+      ok("C4 用品牌色虚线描边（靠形状区分，不是继续调颜色）",
+         addRule.indexOf("dashed") >= 0 && addRule.indexOf("--brand") >= 0);
       ok("C5 不再需要深色模式单独一套（--brandSoft 本身就是深底亮字）",
          css().indexOf('html[data-dark="1"].cat-chip.cat-add') < 0);
       document.getElementById("sheetAdd").classList.remove("on");

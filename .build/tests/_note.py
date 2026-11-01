@@ -43,6 +43,38 @@ STEPS = {
       goto("home");
       renderHome();
     """,
+    # 选中一个分类，专门看「＋ 更多」跟选中态还会不会撞色
+    "chips": """
+      openAddSheet();
+      var s = document.getElementById("sheetAdd");
+      s.style.transition = "none"; s.style.transform = "translateY(0)";
+      document.getElementById("mask").style.transition = "none";
+      var chips = document.querySelectorAll("#catChips .cat-chip");
+      for(var i = 0; i < chips.length; i++){
+        if((chips[i].textContent || "").indexOf("服饰") >= 0){ chips[i].click(); break; }
+      }
+    """,
+    # 记上/清空下面那行「自动识别」勾选框
+    "autoline": """
+      openAddSheet();
+      var s = document.getElementById("sheetAdd");
+      s.style.transition = "none"; s.style.transform = "translateY(0)";
+      document.getElementById("mask").style.transition = "none";
+      var a = document.getElementById("qiAutoIc");
+      if(a) a.checked = true;
+    """,
+    # 不勾「自动识别」之后弹出来的挑图标面板
+    "icpick": """
+      if(!state.records.length){
+        state.records.push({id: "x1", amt: 12, type: "expense", cat: "food", sub: "coffee",
+          peer: "瑞幸", note: "", ts: Date.now(), book: "daily", src: "manual"});
+        save();
+      }
+      openIcPick(state.records[0].id);
+      var s2 = document.getElementById("sheetIc");
+      if(s2){ s2.style.transition = "none"; s2.style.transform = "translateY(0)"; }
+      document.getElementById("mask").style.transition = "none";
+    """,
 }
 
 TMPL = """
