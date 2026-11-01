@@ -219,7 +219,7 @@ body{
 .sw-b:active{filter:brightness(.9)}
 .sw-b svg{width:19px;height:19px;display:block}
 .sw-b.info{background:#8C8378}
-.sw-b.edit{background:#DE6B45}
+.sw-b.note{background:#DE6B45}
 .sw-b.del{background:#E0503E}
 .sw > .item{position:relative;z-index:1;background:var(--card);border-bottom:0;border-radius:15px;
   transform:translateX(0);transition:transform .26s cubic-bezier(.22,.61,.36,1)}
@@ -309,6 +309,11 @@ textarea#qi::placeholder{color:var(--ink3)}
 .preview{display:none;align-items:center;gap:7px;flex-wrap:wrap;padding:9px 0 0;border-top:1px dashed var(--line);margin-top:6px}
 .preview.show{display:flex}
 .pv-t{font-size:12.5px;font-weight:750;color:var(--ink);background:var(--line2);padding:4px 10px;border-radius:99px}
+/* 关掉「自动识别」之后，预览里这个分类图案就是挑图标的入口：点它一下就开。
+   不额外占一行（那行虚线已被用户要求删掉）、也不在点「记上」时自动弹面板。
+   加一圈虚线描边，不然没人知道这个小标签能点。 */
+.pv-t.ic-pickable{border:1px dashed var(--brand);background:var(--brandSoft);color:var(--brandInk);
+  cursor:pointer}
 .pv-a{font-size:13px;font-weight:800;color:var(--brandInk);background:var(--brandSoft);padding:4px 10px;border-radius:99px}
 /* 认出来的商户（2026-11-01 加）：以前预览只说「餐饮 ¥15.00」，
    不说认成哪家店，用户要等记完翻明细才知道「食堂吃饭」这种怪名字。 */
@@ -342,6 +347,18 @@ textarea#qi::placeholder{color:var(--ink3)}
   font-size:11.5px;color:var(--ink2);cursor:pointer;user-select:none;-webkit-user-select:none}
 .ic-auto input{width:15px;height:15px;margin:0;accent-color:var(--brand);flex:0 0 auto}
 .ic-auto span{line-height:1.35}
+/* 「请选择一个图标」：像通知一样浮在底部的一行淡色小字，几秒后自己淡掉。
+   2026-11-01 用户三轮才说明白：
+     ① 别在面板里常驻一行「点这里挑一个图标」（他说「把这个删了」）；
+     ② 别用红字贴在选择框下面（太刺眼）；
+     ③ 要的就是"点记上才冒出来、过几秒自己没了"，跟消息通知栏一个感觉。 */
+.qi-toast{position:fixed;left:50%;bottom:104px;transform:translateX(-50%) translateY(10px);
+  background:#FFF6E6;border:1px solid #F0E1C2;color:#B77F28;border-radius:999px;
+  padding:9px 18px;font-size:12.5px;font-weight:700;line-height:1;white-space:nowrap;
+  box-shadow:0 8px 22px rgba(90,60,20,.13);opacity:0;pointer-events:none;
+  transition:opacity .22s ease, transform .22s ease;z-index:96}
+.qi-toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+html[data-dark="1"] .qi-toast{background:#3B3122;border-color:#4E4130;color:#E7C77E}
 /* 挑图标：7 列铺满，格子正方形。emoji 单独一级字号，不受父容器影响。 */
 .ic-pick{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:10px;
   max-height:40vh;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:1px}
@@ -1071,6 +1088,10 @@ html[data-dark="1"] .cat-off .cx{background:var(--ok);border-color:var(--ok);col
 .uc-card .utime{font-size:11px;color:var(--ink3);font-weight:650;margin-top:7px}
 .uc-q{font-size:12px;font-weight:750;color:var(--ink2);margin-bottom:9px}
 .ucgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:13px}
+/* 大类下面直接摆它的细分（2026-11-01）：用户要改的常常是细分 ——
+   「吹头发」是 日用 › 理发，他想改成 洗护，光点上面那几个大类改不动。 */
+.uc-subrow{display:flex;flex-wrap:wrap;gap:7px;margin:-5px 0 13px}
+.uc-subrow:empty{display:none}
 .ucgrid button{border:1.5px solid var(--line);background:var(--card);border-radius:14px;padding:11px 4px;
   font-family:inherit;font-size:12px;font-weight:700;color:var(--ink2);cursor:pointer;
   display:flex;flex-direction:column;align-items:center;gap:3px;position:relative}
@@ -1158,7 +1179,7 @@ html[data-dark="1"] .cat-off .cx{background:var(--ok);border-color:var(--ok);col
 .upd-card{width:100%;max-width:330px;background:var(--card);border-radius:24px;padding:20px;box-shadow:var(--shadowLg)}
 /* 图标就是 App 自己的图标（安装包里那张，base64 内嵌，断网也在）。
    白底 + 描边不是装饰：这张图是白底线稿，直接放在白卡片上等于隐形。
-   图本身四周留了一圈空白，放大 14% 把那圈裁掉 —— 46px 这个尺寸才看得出是只猫。 */
+   图本身四周留了一圈空白，放大 6% 把那圈裁掉 —— 46px 这个尺寸才看得出是只猫。 */
 .upd-ic{width:46px;height:46px;border-radius:14px;background:#fff;border:1px solid var(--line);
   display:grid;place-items:center;margin-bottom:12px;overflow:hidden}
 .upd-ic img{width:100%;height:100%;object-fit:contain;transform:scale(1.06);display:block}
@@ -1188,6 +1209,8 @@ html[data-dark="1"] .cat-off .cx{background:var(--ok);border-color:var(--ok);col
 .dlg-ic{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;
   font-size:20px;margin-bottom:12px;background:rgba(217,79,79,.13);color:#D94F4F}
 .dlg-ic.warn{background:rgba(201,130,26,.14);color:#C9821A}
+.dlg-ic.note{background:var(--brandSoft);color:var(--brandInk)}
+.dlg-ic.note svg{width:21px;height:21px;display:block}
 .dlg-card h4{font-size:16px;font-weight:800;margin-bottom:7px;line-height:1.35}
 .dlg-body{font-size:12.5px;color:var(--ink2);line-height:1.72;font-weight:600;margin-bottom:14px}
 .dlg-body b{color:var(--ink);font-weight:800}
@@ -1554,8 +1577,8 @@ window.XZB_PERSONALIZE = false;
      挑中的值存进记录的 ic 字段，明细行优先用它，压过品牌识别。 -->
 <div class="sheet" id="sheetIc">
   <div class="grip"></div>
-  <h3>挑个图标</h3>
-  <div class="sh-sub">这一笔在明细里显示哪个图案</div>
+  <h3 id="icTitle">挑个图标</h3>
+  <div class="sh-sub" id="icSub">这一笔在明细里显示哪个图案</div>
   <div class="ic-pick" id="icPick"></div>
   <button class="btn-main" id="icDone" style="margin-top:12px;width:100%">好了</button>
 </div>
@@ -1563,6 +1586,10 @@ window.XZB_PERSONALIZE = false;
 </div>
 
 <div class="sheet-mask" id="mask"></div>
+
+<!-- 「请选择一个图标」的浮字。面板里不再摆任何常驻提示，
+     只有真点了「记上」又没挑图标的时候才冒出这一行，2.6 秒后自己淡掉。 -->
+<div class="qi-toast" id="qiToast" role="status" aria-live="polite"></div>
 
 <!-- 账本选择 -->
 <div class="sheet" id="sheetBook">
@@ -1786,6 +1813,22 @@ window.XZB_PERSONALIZE = false;
     <div class="dlg-btns">
       <button class="btn-ghost" id="askNo">先不删</button>
       <button class="btn-danger" id="askYes">删除</button>
+    </div>
+  </div>
+</div>
+
+<!-- 备注。左滑第二个按钮开这个 —— 只动 note 字段，
+     金额、分类、账本一个字都不碰。留空保存 = 把备注清掉。 -->
+<div class="dlg" id="noteBox">
+  <div class="dlg-card">
+    <div class="dlg-ic note" id="noteIc"></div>
+    <h4 id="noteTitle">加个备注</h4>
+    <div class="dlg-body" id="noteSub"></div>
+    <input class="dlg-inp" id="noteInp" type="text" maxlength="40" autocomplete="off" placeholder="比如：和室友 AA，我先垫的">
+    <div class="dlg-hint" id="noteHint" style="display:none"></div>
+    <div class="dlg-btns">
+      <button class="btn-ghost" id="noteNo">取消</button>
+      <button class="btn-main" id="noteYes">保存</button>
     </div>
   </div>
 </div>
@@ -4582,8 +4625,12 @@ function kindOf(r, catKey){
 
 /* 左滑露出来的三个动作。用 SVG 不用 emoji：emoji 自带颜色，
    压在红/橘底色上会打架，线条图标才能统一成白色。 */
+/* 左滑第二个按钮（2026-11-01 用户要求换成「备注」）：
+   以前这里是铅笔「编辑」，可明细行上点分类图标本来就能改，两个入口干同一件事；
+   备注反倒没有入口 —— 想补一句「和室友 AA」只能开「改这一笔」再翻。
+   图案选便签纸而不是铅笔：铅笔一看还是"编辑"，等于没换。 */
 const SW_IC = {
-  edit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20.4h4.2L20.1 8.5a2.7 2.7 0 0 0-3.8-3.8L4.4 16.6v3.8Z"/><path d="M14.6 6.3l3.1 3.1"/></svg>',
+  note: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M20.2 11.9c0 3.9-3.7 7-8.2 7-1 0-2-.16-2.9-.45L4.6 20.2l1.3-3.5a6.6 6.6 0 0 1-1.9-4.8c0-3.9 3.7-7 8.2-7s8 3.1 8 7Z"/><path d="M8.5 10.6h7.2M8.5 13.6h4.4"/></svg>',
   del: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3.8 6.8h16.4"/><path d="M9.3 3.9h5.4"/><path d="M5.9 6.8 7 20.1h10L18.1 6.8"/><path d="M10.1 10.8v6M13.9 10.8v6"/></svg>'
 };
 
@@ -4787,7 +4834,7 @@ function itemHTML(r){
 
   return '<div class="sw" data-rid="' + esc(r.id) + '">' +
     '<div class="sw-act">' +
-      '<button class="sw-b edit" data-act="edit" aria-label="修改">' + SW_IC.edit + "</button>" +
+      '<button class="sw-b note" data-act="note" aria-label="备注">' + SW_IC.note + "</button>" +
       '<button class="sw-b del" data-act="del" aria-label="删除">' + SW_IC.del + "</button>" +
     "</div>" +
     '<div class="item' + (isIn ? " inc" : "") + (c ? "" : " uncat") + '">' +
@@ -6794,8 +6841,42 @@ function swOpenIt(sw){
 }
 function onSwipeAct(act, id){
   swReset();
-  if(act === "edit") openCatFor(id);
+  if(act === "note") openNoteFor(id);      // 第二个按钮（原「编辑」）—— 分类点图标就能改
   else if(act === "del") askDelRecord(id);
+}
+
+/* =====================================================================
+   备注
+   只改 note 一个字段：金额、分类、账本、图标一律不碰。
+   写空保存 = 把备注删掉（比再来一个「清除」按钮省事）。
+   ===================================================================== */
+let _noteId = "";
+function openNoteFor(id){
+  const r = state.records.find(x => x.id === id);
+  if(!r) return;
+  _noteId = id;
+  $("noteSub").innerHTML = "<b>¥" + money(r.amt) + "</b> " + esc(r.peer || r.note || "这一笔") +
+    "<br>" + dayLabel(r.ts).d + " " + timeStr(r.ts);
+  $("noteInp").value = String(r.note || "");
+  $("noteHint").style.display = "none";
+  $("noteBox").classList.add("on");
+  setTimeout(() => { try{ $("noteInp").focus(); }catch(e){} }, 80);
+}
+function closeNote(){
+  $("noteBox").classList.remove("on");
+  _noteId = "";
+}
+function saveNote(){
+  const r = state.records.find(x => x.id === _noteId);
+  if(!r){ closeNote(); return; }
+  const before = String(r.note || "");
+  const v = String($("noteInp").value || "").replace(/\s+/g, " ").trim().slice(0, 40);
+  if(v === before){ closeNote(); return; }
+  r.note = v;
+  save();
+  renderAll();
+  closeNote();
+  toast(v ? "备注加上了 ✓" : "备注清掉了");
 }
 
 function bindSwipe(){
@@ -7035,6 +7116,7 @@ function ucRender(){
       '<button class="uc-more" id="ucMore" type="button" aria-label="更多分类">' +
       '<i>＋</i><b>更多分类</b><em>咖啡 奶茶</em></button>' +
     '</div>' +
+    ucSubsRow(r) +
     '<label class="uckeep"><input type="checkbox" id="ucKeep" checked> 以后「' +
       esc(r.peer || r.note || "这个商户") + '」都算这一类</label>' +
     (ucMode === "single"
@@ -7043,6 +7125,10 @@ function ucRender(){
       : '<button class="btn-ghost" onclick="ucSkip()" style="width:100%">跳过这笔</button>');
 
   $("ucBody").querySelectorAll("[data-k]").forEach(b => { b.onclick = () => ucPick(b.dataset.k); });
+  /* 细分那一行：点了就是「大类 + 细分」一起定（跟「更多分类」里点细分等价） */
+  $("ucBody").querySelectorAll("[data-uc-sub]").forEach(b => {
+    b.onclick = () => ucPick(b.dataset.ucK, b.dataset.ucSub);
+  });
   const ucm = $("ucMore");
   if(ucm) ucm.onclick = () => ucShowMore();
   const mv = $("ucMove");
@@ -7196,9 +7282,24 @@ function delCustomSub(k, after){
   toast("删掉了「" + (s.txt || "未命名") + "」");
 }
 
+/* 当前大类下的细分，横向铺一行。一个细分都没配的大类就不占位置。 */
+function ucSubsRow(r){
+  if(!r || !r.cat) return "";
+  const subs = subsOf(r.cat);
+  if(!subs.length) return "";
+  return '<div class="uc-subrow">' + subs.map(s =>
+    '<button class="cat-chip' + (r.sub === s.k ? " on" : "") + '" data-uc-k="' + esc(r.cat) +
+    '" data-uc-sub="' + esc(s.k) + '">' + gicon(s.k, s.e) + " " + esc(s.n) + '</button>').join("") +
+    '</div>';
+}
+
 function ucPick(cat, sub){
   const r = ucQ[ucI];
-  r.cat = cat; r.sub = sub || ""; r.guessed = false;
+  /* 点的是"跟自己现在这一类一样"的大类时，别把细分清掉 ——
+     用户要改的往往就是细分（吹头发：日用 › 理发 → 日用 › 洗护），
+     以前这一下把 sub 抹成空，看起来像"改了但没改"，第二天又猜回理发。 */
+  const keepSub = (cat === r.cat) ? String(r.sub || "") : "";
+  r.cat = cat; r.sub = sub || keepSub; r.guessed = false;
   const keep = $("ucKeep");
   // 绑定过的分类，顺手把这笔挪进对应小账本
   const bb = bookBoundTo(cat);
@@ -7206,7 +7307,7 @@ function ucPick(cat, sub){
   if(bb && bookIdOf(r) !== bb.id){ r.book = bb.id; moved = true; ucMoved++; }
   let sib = 0;
   if(keep && keep.checked && r.peer && r.peer !== "一笔支出" && r.peer !== "一笔收入"){
-    state.peerRules[r.peer] = cat;   // 记住这个商户（记主分类，统计口径不变）
+    setRule(r.peer, cat, r.sub);      // 大类 + 细分一起记，统计口径仍按大类
     if(ucMode === "single"){
       state.records.forEach(x => {
         if(x.id !== r.id && x.peer === r.peer && !x.cat){ x.cat = cat; x.sub = sub || ""; x.guessed = false; sib++; }
@@ -7283,7 +7384,7 @@ function openAddSheet(){
       而且是系统弹窗，不算跳浏览器。网页版没有原生壳，才退回浏览器下载。
    地址填几个就按顺序试几个，先回的算——一个挂了不影响。
    ===================================================================== */
-const VER = {code: 112, name: "1.6.105"};
+const VER = {code: 116, name: "1.6.109"};
 
 /* 更新说明就一句话。
    以前这里堆着三五条，弹窗被撑到顶到屏幕外，用户原话「简洁一点」。
@@ -7620,9 +7721,31 @@ function closeSheets(){
 /* =====================================================================
    导入
    ===================================================================== */
+/* =====================================================================
+   用户教过的规则：商户 → 分类
+   2026-11-01 用户报：把「吹头发」改成洗护、勾了「以后都算这一类」，
+   下一笔照样回到理发。根因是**只记了大类**（daily），细分每次现场重猜 ——
+   理发和洗护同属日用，大类没变，规则等于什么都没记住。
+   现在规则里连细分一起存：{c: 大类, s: 细分}。
+   老存档里是字符串（只有大类），读的时候兼容，不迁移也不丢。
+   ===================================================================== */
+function ruleOf(peer){
+  if(!peer) return null;
+  const v = state.peerRules && state.peerRules[peer];
+  if(!v) return null;
+  if(typeof v === "string") return { c: v, s: "" };
+  return { c: String(v.c || ""), s: String(v.s || "") };
+}
+function setRule(peer, cat, sub){
+  if(!peer || !cat) return;
+  state.peerRules = state.peerRules || {};
+  state.peerRules[peer] = { c: cat, s: sub || "" };
+}
+
 function autoClassify(rec){
   // 1) 用户教过的商户规则
-  if(rec.peer && state.peerRules[rec.peer]) return state.peerRules[rec.peer];
+  const _r0 = ruleOf(rec.peer);
+  if(_r0 && _r0.c) return _r0.c;
   // 2) 关键词猜
   const guess = extractCat(rec.peer + " " + (rec.note || ""), rec.type);
   if(guess) return guess;
@@ -7779,10 +7902,14 @@ function ingest(records, skipped, refunds){
     const guessCat = r.cat || autoClassify(r);
     const cat = guessCat || fallbackCat(r.type);
     if(guessCat){ guessed++; } else { uncat++; }
+    /* 教过的规则里带着细分就用它（洗护），没有再按名字猜（会猜成理发） */
+    const _rule = ruleOf(r.peer);
+    const sub = (_rule && _rule.s && _rule.c === cat) ? _rule.s
+      : subGuess((r.peer || "") + " " + (r.note || ""), cat);
     state.records.push({
       id: uid(), amt: r.amt, type: r.type, cat: cat, guessed: !!cat,
       peer: r.peer || "", note: r.note || "", ts: r.ts, src: "import", book: autoBook(cat),
-      sub: subGuess((r.peer || "") + " " + (r.note || ""), cat)
+      sub: sub
     });
     added++;
   }
@@ -8000,12 +8127,21 @@ function previewManual(){
   const res = parseText(txt, Date.now(), state.manualType);
   if(!res.length){ pv.classList.remove("show"); return; }
   const r = res[0];
-  const c = catOf(state.manualCat || r.cat || (r.type === "income" ? "otherin" : "other"));
+  /* 教过的规则要先于词表 —— 2026-11-01 用户报：把「吹头发」教成 日用›洗护 之后，
+     预览框还写「理发」，可记上之后进的是洗护，等于预览在骗人。
+     （记的那一步早就查规则了，只有这里没查。） */
+  const _prKey = String(r.peer || r.note || "").trim();
+  const _pr = ruleOf(_prKey);
+  const _ruleCat = (_pr && _pr.c && !state.manualCat) ? _pr.c : "";
+  const c = catOf(state.manualCat || _ruleCat || r.cat || (r.type === "income" ? "otherin" : "other"));
   /* 选了细分就显示细分（☕ 咖啡）；没选就当场猜一个 ——
      输入「喝瑞幸咖啡」直接预览成咖啡，用户不用记完才发现是笼统的「餐饮」。
      一笔点了两样（名称里有「 + 」）就显示大类：两个细分哪个都不该独占。 */
   const multi = / \+ /.test(r.note || "");
-  const sb = multi ? null : subOf(state.manualSub || subGuess((r.note || "") + " " + txt, c.k));
+  /* 优先级：手上选的细分 > 教过的细分（洗护）> 现场猜（会猜成理发）。
+     规则的大类跟当前显示的大类对不上就不套用 —— 用户手动换了大类，旧细分没意义。 */
+  const _ruleSub = (_pr && _pr.s && _pr.c === c.k) ? _pr.s : "";
+  const sb = multi ? null : subOf(state.manualSub || _ruleSub || subGuess((r.note || "") + " " + txt, c.k));
   $("pvCat").innerHTML = sb ? (gicon(sb.k, sb.e) + " " + esc(sb.n)) : (gicon(c.k, c.e) + " " + esc(c.n));
   /* 顺手把「认成哪家店」也念出来（2026-11-01 用户报）：
      以前预览只有分类 + 金额，商户名要记完翻明细才看得到，
@@ -8061,26 +8197,69 @@ function iconChoices(){
   return out;
 }
 
-let icPickId = "";
-function openIcPick(id){
+let icPickId = "", icPickMode = "rec";
+/* 两种用法：
+   · 不给模式 = 给一笔**已经记下**的账换图标（点明细里的图案、补记后改），选中即落库；
+   · mode="manual" = 给**还没记**的那一笔挑（记一笔面板里关掉自动识别后点那行），
+     只存在 state.manualIc 里，等「记上」那天才写进账。
+   以前只有第一种，所以关掉自动识别之后是「先记账、再补挑」——
+   挑不挑那笔账都记完了，用户说「那这个勾选框是干嘛的」。 */
+function openIcPick(id, mode){
+  const manual = mode === "manual";
   const r = id ? state.records.find(x => x.id === id) : null;
   const box = $("icPick");
-  if(!box || !r) return;
-  icPickId = id;
-  const cur = String(r.ic || "").trim();
+  if(!box || (!r && !manual)) return;
+  icPickId = id || "";
+  icPickMode = manual ? "manual" : "rec";
+  const cur = String(manual ? (state.manualIc || "") : (r.ic || "")).trim();
+  /* 两种模式长得一样 = 用户以为"点进去还是原来那个面板，根本没变化"（2026-11-01）。
+     所以标题、副标题、按钮全换：进来的第一眼就知道"这是在给还没记的这一笔挑"。 */
+  const _it = $("icTitle"), _is = $("icSub"), _idn = $("icDone");
+  if(manual){
+    const _txt = String(($("qi") && $("qi").value || "").trim());
+    if(_it) _it.textContent = "给这一笔挑个图标";
+    if(_is) _is.textContent = (_txt ? _txt.slice(0, 14) + " · " : "") + "挑好点下面按钮，回来再点「记上」";
+    if(_idn) _idn.textContent = "用这个图标";
+  } else {
+    if(_it) _it.textContent = "挑个图标";
+    if(_is) _is.textContent = "这一笔在明细里显示哪个图案";
+    if(_idn) _idn.textContent = "好了";
+  }
   box.innerHTML = iconChoices().map(e =>
     '<button type="button" data-ic="' + esc(e) + '"' +
     (e === cur ? ' class="on"' : '') + '>' + esc(e) + '</button>').join("");
   box.querySelectorAll("[data-ic]").forEach(b => {
     b.onclick = () => {
-      r.ic = b.dataset.ic;
-      save();
+      if(manual){ state.manualIc = b.dataset.ic; }
+      else { r.ic = b.dataset.ic; save(); renderFlow(); renderHome(); }
       box.querySelectorAll("[data-ic]").forEach(x => x.classList.remove("on"));
       b.classList.add("on");
-      renderFlow(); renderHome();
     };
   });
   openSheet("sheetIc");
+}
+
+/* 底部飘一行淡字，2.6 秒后自己淡掉（跟通知栏一个路数）。
+   专门给「请选择一个图标」这类一句话的提醒用 —— 不用 modal、不用 alert、不打断输入。 */
+let _qiTipTimer = 0;
+/* 纯提示：飘出来、几秒后自己淡掉，不接收点击。
+   2026-11-01 用户原话「下方小字只是用来提醒的」—— 所以它不弹面板、也不当入口。 */
+function toastTip(msg){
+  const el = $("qiToast");
+  if(!el) return;
+  el.textContent = msg;
+  clearTimeout(_qiTipTimer);
+  el.classList.add("on");
+  _qiTipTimer = setTimeout(() => el.classList.remove("on"), 2600);
+}
+/* 勾上「自动识别」= 图标归程序猜，手上挑的那个作废；取消勾选 = 自己挑，
+   入口就是预览里那个分类图案（点一下开挑图标），不再另起一行、也不自动弹面板。 */
+function syncQiIc(){
+  const a = $("qiAutoIc"), pv = $("pvCat");
+  if(!a) return;
+  const manual = !a.checked;
+  if(a.checked) state.manualIc = "";      // 交给程序猜，手挑的作废
+  if(pv) pv.classList.toggle("ic-pickable", manual);
 }
 
 function commitManual(){
@@ -8092,6 +8271,18 @@ function commitManual(){
   if(!txt){ toast("写点什么，比如「午饭15」"); return; }
   const res = parseText(txt, Date.now(), state.manualType);
   if(!res.length){ toast("没认出金额，带上数字试试"); return; }
+  /* 关掉「自动识别」= 这一笔的图标由用户定，没挑就不准记。
+     提示的最终形态（2026-11-01 用户四轮口径）：
+       「点记上不会真正记上，下方飘一行淡色小字，几秒后自己消失，跟通知栏一样，
+        别再弹出来那个画面」。
+     所以：不常驻、不红字、**也不自动弹挑图标的面板**。
+     那行飘字自己就是入口 —— 点它一下才开面板，不点它就只是提醒。 */
+  const _autoIcBox = $("qiAutoIc");
+  const _manualIc = (_autoIcBox && !_autoIcBox.checked) ? String(state.manualIc || "") : "";
+  if(_autoIcBox && !_autoIcBox.checked && !_manualIc){
+    toastTip("请选择一个图标");
+    return;
+  }
   let firstId = "";
   res.forEach((r, i) => {
     /* 2026-11-01 用户报：把「吹头发」手动分成洗护、勾了「以后都算这一类」，
@@ -8099,8 +8290,9 @@ function commitManual(){
        补记这条路完全不看它 —— 规则写进去了却没人用。
        顺序跟导入保持一致：面板上手选的 > 用户教过的 > 词表猜的。 */
     const _peer = r.note || "";
-    const _rule = (_peer && state.peerRules && state.peerRules[_peer]) || null;
-    const _cat = i === 0 ? (state.manualCat || _rule || r.cat) : (_rule || r.cat);
+    const _rule = ruleOf(_peer);                  // {c: 大类, s: 细分} 或 null
+    const _cat = i === 0 ? (state.manualCat || (_rule && _rule.c) || r.cat)
+                         : ((_rule && _rule.c) || r.cat);
     const _id = uid();
     if(i === 0) firstId = _id;
     state.records.push({
@@ -8114,10 +8306,15 @@ function commitManual(){
          一笔里点了两样的（名称里有「 + 」）**不挂单一细分** ——
          挂哪个都在吞另一样，交给明细行并排显示两个图案、右边写大类「餐饮」。
          多条时只拿这一行自己的名字，不拿整段原文，免得串味。 */
+      /* 手上选的细分 > 教过的细分（洗护）> 现场按名字猜（会猜成理发） */
       sub: (i === 0 && state.manualSub) ? state.manualSub
+        : (_rule && _rule.s && _rule.c === _cat) ? _rule.s
         : (/ \+ /.test(r.note || "") ? ""
           : subGuess((r.note || "") + " " + (res.length === 1 ? txt : ""), _cat)),
       guessed: false, peer: r.note || "", note: i === 0 ? memo : "",
+      /* 手挑的图标只挂第一笔（和分类、备注一致）：一句话记好几笔时，
+         同一个图案糊到五个不同的东西上，明细行反而更乱。 */
+      ic: (i === 0 ? _manualIc : ""),
       ts: r.ts, src: "manual",
       book: pickBook(_cat)
     });
@@ -8133,14 +8330,9 @@ function commitManual(){
   if(res.length > 1) toast("记了 " + res.length + " 笔 ✓");
   else if(flipped) toast("按文字记成了" + (res[0].type === "income" ? "收入" : "支出") + " ✓");
   else toast("记上了 ✓");
-  /* 没勾「自动识别」= 用户要自己挑图标：把补记面板收起来，直接换挑图标的面板。
-     同步切换而不是延时 —— 两张面板都在底部同一位置，看起来像内容替换，
-     延时反而会先闪一下空白。 */
-  const autoIc = $("qiAutoIc");
-  if(firstId && autoIc && !autoIc.checked){
-    closeSheets();
-    openIcPick(firstId);
-  }
+  /* 挑过的图标跟着这一笔用完了，清掉，下一笔重新挑（不然会莫名其妙沿用上一笔的图案）。
+     勾选框本身的状态留着 —— 那是"这个人的习惯"，不该记一笔就复位。 */
+  state.manualIc = "";
 }
 
 /* =====================================================================
@@ -8674,7 +8866,38 @@ function bind(){
     if((e.ctrlKey || e.metaKey) && e.key === "Enter"){ e.preventDefault(); commitManual(); }
   });
   $("btnAdd").onclick = commitManual;
-  $("btnClear").onclick = () => { $("qi").value = ""; if($("qiNote")) $("qiNote").value = ""; state.manualCat = null; state.manualSub = null; fillChips(); previewManual(); };
+  $("btnClear").onclick = () => {
+    $("qi").value = ""; if($("qiNote")) $("qiNote").value = "";
+    state.manualCat = null; state.manualSub = null; state.manualIc = "";
+    fillChips(); previewManual();
+  };
+  /* 勾选「自动识别」↔「自己挑」：只换那一行的显隐，不改别的 */
+  if($("qiAutoIc")) $("qiAutoIc").onchange = syncQiIc;
+  /* 点了预览里那个分类图案 → 挑图标（只有在关掉自动识别时才需要挑） */
+  if($("pvCat")) $("pvCat").onclick = () => {
+    const a = $("qiAutoIc");
+    if(a && !a.checked) openIcPick("", "manual");
+  };
+  /* 「挑个图标」的好了：从记一笔进来的回到记一笔（别把刚打的字关掉），
+     给已有账目换图标的就直接收起面板 */
+  if($("icDone")) $("icDone").onclick = () => {
+    /* 必须先把挑图标那张收掉：openSheet 只负责加 on，两张都开着时
+       后来的 sheetIc 叠在上面，看着像"点了好了没反应"。 */
+    if(icPickMode === "manual"){
+      closeSheets(); openSheet("sheetAdd"); fillChips(); previewManual();
+      if(String(state.manualIc || "")) toastTip("图标选好了");
+      return;
+    }
+    closeSheets();
+  };
+  syncQiIc();
+
+  /* 备注框 */
+  if($("noteIc")) $("noteIc").innerHTML = SW_IC.note;   // 跟左滑那个按钮同一个图标
+  $("noteNo").onclick = closeNote;
+  $("noteYes").onclick = saveNote;
+  $("noteBox").onclick = e => { if(e.target === $("noteBox")) closeNote(); };
+  $("noteInp").onkeydown = e => { if(e.key === "Enter"){ e.preventDefault(); saveNote(); } };
   $("catChips").onclick = e => {
     const b = e.target.closest(".cat-chip");
     if(!b) return;
@@ -9609,8 +9832,7 @@ function addFromNotify(p, quiet){
         if(c2 && c2 !== oldCat){
           dup.cat = c2;
           dup.guessed = true;
-          state.peerRules = state.peerRules || {};
-          state.peerRules[dup.peer] = c2;
+          setRule(dup.peer, c2, dup.sub || "");
         }
       }
     }
@@ -9654,6 +9876,8 @@ function addFromNotify(p, quiet){
      （导入账单那条链路一直这么做，通知这条漏了：实测 40 笔里 17 笔落在待分类） */
   const cat = p.refund ? "refund"
     : (autoClassify({peer: p.peer, note: p.note, type: p.type}) || fallbackCat(p.type));
+  /* 这个商户以前教过细分（吹头发 → 洗护）就照它走，别再猜回理发 */
+  const _nrule = ruleOf(p.peer);
   const rec = {
     id: uid(), amt: p.amt, type: p.type,
     cat: cat, guessed: !!cat,
@@ -9661,7 +9885,8 @@ function addFromNotify(p, quiet){
     ts: p.ts, src: "notify", book: autoBook(cat),
     /* 通知里就能认出细分（「瑞幸咖啡」→ ☕ 咖啡），不用用户事后一条条点。
        只认父类对得上的：主分类是餐饮，才可能落到咖啡/奶茶这些。 */
-    sub: subGuess((p.peer || "") + " " + (p.note || ""), cat),
+    sub: (_nrule && _nrule.s && _nrule.c === cat) ? _nrule.s
+      : subGuess((p.peer || "") + " " + (p.note || ""), cat),
     // 来源 App：明细里显示「来自 拼多多」，和商户名分开
     from: p.from || "",
     ref: ref
@@ -9670,8 +9895,7 @@ function addFromNotify(p, quiet){
 
   // 记住这笔的归属，下次同商户直接落类（兜底名不学，学了也没用）
   if(cat && p.peer && !/^一笔/.test(p.peer)){
-    state.peerRules = state.peerRules || {};
-    state.peerRules[p.peer] = cat;
+    setRule(p.peer, cat, rec.sub);      // 大类 + 细分一起记
   }
 
   const d = new Date(p.ts);

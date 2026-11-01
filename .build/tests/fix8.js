@@ -28,7 +28,10 @@
       eq("两个动作按钮", (h.match(/data-act=/g) || []).length, 2);
       /* 「详情」在 2026-10-30 删掉了：点整行就能改，多一个按钮只是多一次点击 */
       ok("没有详情按钮", h.indexOf('data-act="info"') < 0);
-      ok("有修改", h.indexOf('data-act="edit"') >= 0);
+      /* 2026-11-01：左滑第二个按钮从「编辑」换成「备注」——
+         点明细里的分类胶囊本来就能改，编辑是重复入口，备注反而没地方写 */
+      ok("有备注", h.indexOf('data-act="note"') >= 0);
+      ok("编辑按钮删掉了", h.indexOf('data-act="edit"') < 0);
       ok("有删除", h.indexOf('data-act="del"') >= 0);
       /* 左滑按钮的图标是这两个按钮自己内联的 svg，跟分类 emoji 无关 */
       eq("两个按钮图标都是 svg", (h.match(/<svg/g) || []).length, 2);

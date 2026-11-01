@@ -87,7 +87,13 @@
       var row2 = document.querySelector('#flowBody .sw[data-rid="' + rid + '"]');
       swOpenIt(row2);
       ok("左滑能打开", row2.classList.contains("open"));
-      click(row2.querySelector('[data-act="edit"]'));
+      /* 2026-11-01：左滑的「编辑」换成了「备注」，改分类/金额走"点分类胶囊"这条路 */
+      ok("左滑只有备注和删除", !!row2.querySelector('[data-act="note"]') &&
+         !row2.querySelector('[data-act="edit"]'));
+      click(row2.querySelector('[data-act="note"]'));
+      ok("点备注开的是备注框", document.getElementById("noteBox").classList.contains("on"));
+      closeNote();
+      openCatFor(rid);
       ok("打开改这一笔的面板", document.getElementById("sheetUc").classList.contains("on"));
       var ai = document.getElementById("ucAmt");
       ok("金额是能改的输入框", !!ai);
@@ -101,8 +107,7 @@
       ok("改完金额后金额右缘还齐", spread(document.getElementById("flowBody"), ".it-a") <= 1);
 
       /* 乱填金额不能把账改坏 */
-      swOpenIt(document.querySelector('#flowBody .sw[data-rid="' + rid + '"]'));
-      click(document.querySelector('#flowBody .sw[data-rid="' + rid + '"] [data-act="edit"]'));
+      openCatFor(rid);
       var ai2 = document.getElementById("ucAmt");
       if(ai2){ ai2.value = "abc"; ai2.dispatchEvent(new Event("blur")); }
       closeSheets();
