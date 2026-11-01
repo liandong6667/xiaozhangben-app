@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.xiaozhangben.app"
+    android:versionCode="110"
+    android:versionName="1.6.103">
+
+    <uses-sdk android:minSdkVersion="24" android:targetSdkVersion="34" />
+
+    <!-- 检查更新要联网（也用于本地 127.0.0.1 的页面服务） -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- 往桌面加「自定义图标」快捷方式。Android 8 起系统会自己在弹窗里确认，
+         这条权限在 8 以上其实已经不需要，留着是照顾部分国产桌面 -->
+    <uses-permission android:name="com.android.launcher.permission.INSTALL_SHORTCUT" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <!-- 在 App 内装新版：Android 8 起需要这条，用户在系统里点一次「允许」即可 -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+
+    <application
+        android:label="@string/app_name"
+        android:icon="@mipmap/ic_launcher"
+        android:theme="@style/AppTheme"
+        android:allowBackup="true"
+        android:hardwareAccelerated="true"
+        android:usesCleartextTraffic="true"
+        android:supportsRtl="true">
+
+        <!-- 启动入口 = 主界面。点图标直接进 App，不再先弹「开启自动记账」引导页。
+             2026-10-29 用户明确要求：核心方向是「记一笔」，自动记账的权限清单
+             不该每次打开都挡在前面。引导页本身保留，只从「我的 → 权限设置」进。
+
+             真正的「桌面图标 + 名字」在下面 4 个 activity-alias 上，MainActivity
+             自己不再挂 LAUNCHER —— 系统只认一个启用的别名，切别名就等于换图标和名字。
+             之所以要拆成 4 个别名：manifest 里的 label / icon 是编译期写死的，
+             运行中改不了，这是安卓唯一被官方支持的做法。 -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:configChanges="orientation|screenSize|keyboardHidden|screenLayout"
+            android:windowSoftInputMode="adjustResize">
+        </activity>
+
+        <!-- ① 默认：小账本（猫） -->
+        <activity-alias
+            android:name=".LaunchBook"
+            android:targetActivity=".MainActivity"
+            android:exported="true"
+            android:enabled="true"
+            android:label="@string/alias_book"
+            android:icon="@mipmap/ic_launcher">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <!-- ② 记账（还是猫，只换个短名字） -->
+        <activity-alias
+            android:name=".LaunchLedger"
+            android:targetActivity=".MainActivity"
+            android:exported="true"
+            android:enabled="false"
+            android:label="@string/alias_ledger"
+            android:icon="@mipmap/ic_launcher">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <!-- ③ 计算器（伪装） -->
+        <activity-alias
+            android:name=".LaunchCalc"
+            android:targetActivity=".MainActivity"
+            android:exported="true"
+            android:enabled="false"
+            android:label="@string/alias_calc"
+            android:icon="@mipmap/ic_calc">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <!-- ④ 备忘录（伪装） -->
+        <activity-alias
+            android:name=".LaunchNote"
+            android:targetActivity=".MainActivity"
+            android:exported="true"
+            android:enabled="false"
+            android:label="@string/alias_note"
+            android:icon="@mipmap/ic_note">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+
+        <!-- 只服务「下好的更新包」这一个文件，给系统安装器临时读权限 -->
+        <provider
+            android:name=".ApkProvider"
+            android:authorities="com.xiaozhangben.app.apk"
+            android:exported="false"
+            android:grantUriPermissions="true" />
+
+    </application>
+</manifest>

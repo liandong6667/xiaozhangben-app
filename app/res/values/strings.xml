@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">小账本</string>
+
+    <!-- 桌面图标/名字的几套预设（App 内「我的 → 名字和图标」可切）。
+         安卓不允许运行中改 manifest 的 label，只能靠 activity-alias 各挂一套，
+         启用哪套就显示哪套 —— 所以名字只能是这里预设好的，不能随便打字。 -->
+    <string name="alias_book">小账本</string>
+    <string name="alias_ledger">记账</string>
+    <string name="alias_calc">计算器</string>
+    <string name="alias_note">备忘录</string>
+    <string name="listener_label">小账本 · 自动记账</string>
+    <string name="acc_label">小账本 · 付款页识别</string>
+    <string name="acc_desc">只在屏幕上出现「支付成功」「付款成功」这类字的时候读一眼金额和商户，把这笔钱自动记下来。碰到输入密码的界面立刻停止读取，其余文字一行不留，不联网，所有账目只存在这台手机里。</string>
+</resources>

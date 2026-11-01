@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  自适应图标（Android 8.0+）。
+
+  以前只有 legacy PNG，启动器会把那张图再缩进 108dp 的安全区里套遮罩，
+  等于缩了两圈 —— 桌面上猫只剩七成宽、五成高，用户一直说"小猫太小了"。
+  改成自适应图标后前景层按原尺寸铺满、只被遮罩裁，所以猫能真正画大。
+
+  前景 = drawable-*/ic_launcher_foreground.png（108dp 画布，猫按高度占 88%，
+         横向溢出的胡子尖由遮罩自然裁掉）
+  背景 = 纯白，和 App 内部底色一致
+
+  legacy 的 mipmap-*/ic_launcher.png 仍然保留，给 Android 7.x（minSdk 24）兜底。
+-->
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@color/ic_launcher_background" />
+    <foreground android:drawable="@drawable/ic_launcher_foreground" />
+</adaptive-icon>

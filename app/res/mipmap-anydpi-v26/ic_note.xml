@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 换样子用的自适应图标（note）。背景纯色 + 透明前景，
+     图案收在中心 60% 以内，圆/方圆/方任何遮罩都切不到。 -->
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@color/ic_note_bg" />
+    <foreground android:drawable="@drawable/ic_note_fg" />
+</adaptive-icon>

@@ -1,0 +1,77 @@
+# ============================================================
+# 小账本 · 哪些东西不进仓库
+# 注意：这文件里 # 只有写在**行首**才算注释。
+#      写成「下载页/    # 说明」是无效的 —— 整行会被当成一个文件名，
+#      什么也匹配不上（我已经踩过一次）。
+# ============================================================
+
+# ---- 绝对不能进公开仓库 ----
+app/keystore.jks
+app/build.sh
+*.jks
+*.keystore
+
+# ---- 构建产物 / 打包中间文件 ----
+小账本.apk
+*.apk
+*.apk.idsig
+app/build/
+app/gen/
+app/assets/www/index.html
+在线预览/
+下载页/
+交付/
+发布/
+安装包/
+备份/
+报告/
+*.zip
+
+# ---- 测试运行时产生的东西 ----
+.build/tests/_prof/
+.build/tests/_run/
+.build/tests/_old/
+.build/tests/_old-auto/
+.build/tests/javacheck/
+.build/*.png
+.build/*.html
+.build/*.txt
+.build/shots/
+
+# ---- 只在本机用得上的小工具（清回收站之类）----
+.build/_v.js
+.build/_shotpanel2.py
+.build/cleanup.ps1
+.build/lsrecycle.py
+.build/recyclecheck.py
+
+# ---- 打包用的工具链（几百 MB，自己下）----
+.build/jdk-17.0.13+11/
+.build/sdk/
+.build/platform-tools/
+.build/_edgeprof/
+.build/_edgeprof2/
+.build/icon_src/
+.build/logos/
+
+# ---- 临时页面 ----
+_chk*.html
+_w2*.html
+_note*.html
+_probe*.html
+_dbg*.html
+
+# ---- 编辑器 / 系统 ----
+.workbuddy/
+.vscode/
+.DS_Store
+Thumbs.db
+desktop.ini
+*.tmp
+
+# ---- 过时 / 内部文档 ----
+# 这三份写的还是"读通知自动记账 + 截图 OCR"那套，2026-10 已经整条下线，
+# 公开出去会让人以为现在还要通知使用权，所以只留在本机。
+00-先看我.md
+功能介绍.md
+自动记账与商户图标-说明.md

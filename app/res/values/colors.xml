@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 图标背景层。必须是纯白 255：桌面图标的白底和 App 内部的白底要一模一样，
+         差 1 就会在图标边缘看出一条灰线（1.6.68 踩过这个坑）。 -->
+    <color name="ic_launcher_background">#FFFFFF</color>
+
+    <!-- 「换个样子」用的图标背景层。值必须和 make_disguise_icons.py 里
+         STYLES 的 bg 完全一致，差一点图标边缘就会露一圈异色。 -->
+    <color name="ic_calc_bg">#37474F</color>
+    <color name="ic_note_bg">#F2C14E</color>
+</resources>
