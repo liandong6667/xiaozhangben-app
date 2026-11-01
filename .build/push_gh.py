@@ -77,7 +77,15 @@ def main():
     url = "https://%s:%s@github.com/%s/%s.git" % (owner, TOKEN, owner, REPO)
     branch = sh("git", "rev-parse", "--abbrev-ref", "HEAD")
     print("推到 %s 的 %s 分支…" % (REPO, branch))
-    out = sh("git", "push", url, "%s:%s" % (branch, branch))
+    # 这两个 -c 是 2026-11-01 第一次上传时踩出来的，别删：
+    #  · http.proxy= / https.proxy=  本机环境变量里挂着公司/沙箱代理，
+    #    git 走它会被回 502（CONNECT tunnel failed），直连反而通。
+    #  · http.sslBackend=openssl    Windows 版 git 默认用 schannel，
+    #    跟 github.com 会陷入「反复重新握手」死循环，卡满 21 秒再报连接失败。
+    #    换 openssl 后是秒过。urllib（发版脚本）不受影响，只有 git 需要。
+    out = sh("git", "-c", "http.sslBackend=openssl",
+             "-c", "http.proxy=", "-c", "https.proxy=",
+             "push", url, "%s:%s" % (branch, branch))
     print(out[-400:] if out else "(无输出)")
     print("")
     print("完成：https://github.com/%s/%s" % (owner, REPO))
